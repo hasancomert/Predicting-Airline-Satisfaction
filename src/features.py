@@ -17,6 +17,7 @@ Groups (comma separated on the command line):
   fdprof label-free profile of each Flight Distance value over train+test: share of Business
          class / business travel / loyal customers, mean age and mean of every rating
   ofd    the same profile computed on the original data, plus the original row count per value
+  allcat categorical copies of every numeric column (meant for CatBoost's own CTR encodings)
 """
 import numpy as np
 import pandas as pd
@@ -93,6 +94,9 @@ def build(groups, train, test, orig=None):
         base = A.iloc[:n_tt]
         for c in ["Flight Distance", "Age", DEP, ARR]:
             F[c + "_cnt"] = A[c].map(base[c].value_counts()).fillna(0)
+    if "allcat" in groups:
+        for c in NUMS:
+            F[c + "_c"] = pd.Categorical(A[c].fillna(-1).astype(int))
     if "rcat" in groups:
         for c in RATINGS:
             F[c + "_cat"] = pd.Categorical(A[c])

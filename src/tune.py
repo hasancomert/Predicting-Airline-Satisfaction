@@ -29,7 +29,7 @@ NF, TIMEOUT = int(opts.get("nfold", 2)), opts.get("timeout")
 USE_ORIG = int(opts.get("orig", 0))
 THREADS = int(opts.get("threads", 4))
 
-if USE_ORIG or "omean" in groups:
+if USE_ORIG or {"omean", "ofd"} & set(groups):
     train, test, y, orig, yo = load(orig=True)
 else:
     train, test, y = load()

@@ -45,7 +45,7 @@ LOG = int(opts.pop("log", 1))
 NAME = opts.pop("name", None)
 THREADS = int(opts.pop("threads", 4))
 
-need_orig = USE_ORIG or "omean" in groups
+need_orig = USE_ORIG or bool({"omean", "ofd"} & set(groups))
 if need_orig:
     train, test, y, orig, yo = load(orig=True)
 else:
