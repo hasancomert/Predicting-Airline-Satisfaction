@@ -58,3 +58,4 @@ Rows are appended by `src/train.py`; the notes column says what changed. Decisio
 | lgbm_base+te1+tefd+fdprof+cnt+inter+te2_lr0.1_orig | FS2 (FS1 + te2), cached TE: rerun for reference | 0.96085 ± 0.00051 | 0.96084 | 132 | 608s | |
 | lgbm_base+te1+tefd+fdprof+cnt+inter+te2+opred_lr0.1_orig | FS2 + opred | 0.96083 ± 0.00052 | 0.96082 | 114 | 273s | |
 | lgbm_base+te1+tefd+fdprof+cnt+inter+te2+cnt2+opred_lr0.1_orig | FS3 = FS2 + cnt2 + opred | 0.96089 ± 0.00052 | 0.96089 | 84 | 372s | |
+| lgbm_base+te1+tefd+fdprof+cnt+inter+te2_lr0.1_t1_orig | FS2, tuned LGBM preset t1 | 0.96098 ± 0.00057 | 0.96098 | 96 | 529s | |
