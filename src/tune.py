@@ -16,10 +16,10 @@ import lightgbm as lgb
 import xgboost as xgb
 from catboost import CatBoostClassifier
 from sklearn.metrics import roc_auc_score
-from sklearn.preprocessing import TargetEncoder
 
 from common import ROOT, SEED, folds, load
 from features import build, te_keys
+from te_cache import te_block
 
 warnings.filterwarnings("ignore")
 model_name, groups = sys.argv[1], sys.argv[2].split(",")
@@ -37,7 +37,7 @@ else:
 n, m = len(train), len(test)
 F = build(groups, train, test, orig)
 te_spec = [g for g in groups if g.startswith("te")]
-KEYS = te_keys(te_spec, train, test, orig).to_numpy() if te_spec else None
+KEYS = te_keys(te_spec, train, test, orig) if te_spec else None
 if USE_ORIG:
     F["is_orig"] = np.r_[np.zeros(n + m), np.ones(len(orig))].astype(int)
 CATCOLS = [c for c in F.columns if isinstance(F[c].dtype, pd.CategoricalDtype)]
@@ -53,12 +53,9 @@ for tr, va in folds(y)[:NF]:
         ktr = np.r_[tr, np.arange(n + m, n + m + len(orig))]
     Xva = X.iloc[va]
     if KEYS is not None:
-        enc = TargetEncoder(target_type="binary", cv=5, shuffle=True, random_state=SEED)
-        cols = [f"te{i}" for i in range(KEYS.shape[1])]
-        Xtr = pd.concat([Xtr.reset_index(drop=True),
-                         pd.DataFrame(enc.fit_transform(KEYS[ktr], ytr), columns=cols)], axis=1)
-        Xva = pd.concat([Xva.reset_index(drop=True),
-                         pd.DataFrame(enc.transform(KEYS[va]), columns=cols)], axis=1)
+        cols, etr, eva, _ = te_block(KEYS, len(DATA), ktr, ytr, va, n, m, USE_ORIG, 5)
+        Xtr = pd.concat([Xtr.reset_index(drop=True), pd.DataFrame(etr, columns=cols)], axis=1)
+        Xva = pd.concat([Xva.reset_index(drop=True), pd.DataFrame(eva, columns=cols)], axis=1)
     if model_name == "cat":
         Xtr, Xva = (d.astype({c: str for c in CATCOLS}) for d in (Xtr, Xva))
     DATA.append((Xtr, ytr, Xva, y[va]))

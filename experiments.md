@@ -39,3 +39,16 @@ Rows are appended by `src/train.py`; the notes column says what changed. Decisio
 | lgbm_base+te1+tefd+fdprof+cnt+inter+ofd_lr0.1_orig | FS1 + ofd (original per-FD profile) | 0.96048 ± 0.00054 | 0.96047 | 188 | 351s | |
 | lgbm_base+te1+tefd+fdprof+cnt+inter+omean_lr0.1_orig | FS1 + omean | 0.96050 ± 0.00060 | 0.96049 | 176 | 275s | |
 | lgbm_base+te1+tefd+fdprof+cnt+inter+te2_lr0.1_orig | FS1 + TE of all low-card column pairs | 0.96082 ± 0.00055 | 0.96082 | 116 | 591s | |
+| xgb_base+te1+tefd+fdprof+cnt+inter_lr0.1_orig | XGBoost std preset (depth 6) on FS1 + original rows | 0.96028 ± 0.00063 | 0.96028 | 398 | 478s | |
+| cat_base+te1+tefd+fdprof+cnt+inter_lr0.1_orig | CatBoost depth 6 on FS1 + original rows | 0.96054 ± 0.00059 | 0.96054 | 911 | 1718s | |
+
+## Submissions
+
+| # | File | Content | CV (OOF) | Nested CV | Public LB |
+|---|---|---|---|---|---|
+| 1 | s01_blend_lr0.1_lgbmFS1-catFS1-lgbmFS2.csv | rank hill-climb: LGBM FS1 0.25, CatBoost FS1 0.25, LGBM FS2 0.5 (all lr 0.1) | 0.96113 | 0.96113 | 0.96059 |
+
+## Model runs (continued)
+
+| Experiment (tag) | Change | CV mean ± std | OOF AUC | avg trees | time | Public LB |
+|---|---|---|---|---|---|---|

@@ -20,10 +20,10 @@ import lightgbm as lgb
 import xgboost as xgb
 from catboost import CatBoostClassifier
 from sklearn.metrics import roc_auc_score
-from sklearn.preprocessing import TargetEncoder
 
 from common import FOLDS, ROOT, SEED, folds, load, save
 from features import build, te_keys
+from te_cache import te_block
 
 warnings.filterwarnings("ignore", message=".*eval_set.*deprecated")
 
@@ -63,30 +63,6 @@ X_orig = F.iloc[n + m:].reset_index(drop=True) if USE_ORIG else None
 fold_idx = folds(y, K)
 
 
-CACHE = ROOT / "cache"
-
-
-def te_block(i, ktr, ytr, va):
-    """In-fold target encodings of every key column for fold i, cached per column on disk
-    (each column is encoded independently, so a cached column is reused by any group set)."""
-    CACHE.mkdir(exist_ok=True)
-    cols = list(KEYS.columns)
-    tag = f"o{USE_ORIG}_k{K}_f{i}"
-    path = lambda c: CACHE / f"{c}__{tag}.npy"
-    missing = [c for c in cols if not path(c).exists()]
-    if missing:
-        enc = TargetEncoder(target_type="binary", cv=5, shuffle=True, random_state=SEED)
-        k = KEYS[missing].to_numpy()
-        parts = (enc.fit_transform(k[ktr], ytr), enc.transform(k[va]), enc.transform(k[n:n + m]))
-        for j, c in enumerate(missing):
-            tmp = CACHE / f"{c}__{tag}.{MSEED}.tmp.npy"
-            np.save(tmp, np.concatenate([p[:, j] for p in parts]).astype(np.float32))
-            tmp.rename(path(c))
-    M = np.column_stack([np.load(path(c)) for c in cols])
-    a, b = len(ktr), len(ktr) + len(va)
-    return cols, M[:a], M[a:b], M[b:]
-
-
 def fold_data(i, tr, va):
     Xtr, ytr, ktr = X.iloc[tr], y[tr], tr
     if USE_ORIG:
@@ -95,7 +71,7 @@ def fold_data(i, tr, va):
         ktr = np.r_[tr, np.arange(n + m, n + m + len(orig))]
     Xva, Xte = X.iloc[va], X_test
     if KEYS is not None:
-        cols, etr, eva, ete = te_block(i, ktr, ytr, va)
+        cols, etr, eva, ete = te_block(KEYS, i, ktr, ytr, va, n, m, USE_ORIG, K)
         add = lambda d, e: pd.concat([d.reset_index(drop=True), pd.DataFrame(e, columns=cols)],
                                      axis=1)
         Xtr, Xva, Xte = add(Xtr, etr), add(Xva, eva), add(Xte, ete)
