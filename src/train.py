@@ -81,6 +81,9 @@ def fold_data(i, tr, va):
 
 # tuned presets (Optuna, src/tune.py, 2 folds of FS1 + original rows, lr 0.1)
 TUNED = {
+    ("xgb", "t1"): dict(max_depth=10, min_child_weight=83.35, subsample=0.9042,
+                        colsample_bytree=0.4437, reg_lambda=0.002737, reg_alpha=0.5457,
+                        gamma=0.005762, max_bin=1024),
     ("lgbm", "t1"): dict(num_leaves=112, max_depth=-1, min_child_samples=9, subsample=0.9723,
                          colsample_bytree=0.4592, reg_lambda=18.50, reg_alpha=0.005066,
                          min_split_gain=0.001176, max_bin=511, cat_smooth=1.75),
@@ -142,9 +145,20 @@ print(f"{tag}: {X.shape[1]} features, {len(KEYS.columns) if KEYS is not None els
       flush=True)
 t0 = time.time()
 oof, pred, aucs, its = np.zeros(n), np.zeros(m), [], []
+PART = ROOT / "cache" / "partial"
+PART.mkdir(parents=True, exist_ok=True)
+ncols = 0
 for i, (tr, va) in enumerate(fold_idx):
-    Xtr, ytr, Xva, Xte = fold_data(i, tr, va)
-    oof[va], p, it = fit(Xtr, ytr, Xva, y[va], Xte)
+    ck = PART / f"{tag}__f{i}.npz"  # per-fold checkpoint: a restarted run resumes here
+    if ck.exists():
+        d = np.load(ck)
+        oof[va], p, it, ncols = d["oof"], d["pred"], int(d["it"]), int(d["ncols"])
+        print(f"  fold {i}: resumed from checkpoint", flush=True)
+    else:
+        Xtr, ytr, Xva, Xte = fold_data(i, tr, va)
+        oof[va], p, it = fit(Xtr, ytr, Xva, y[va], Xte)
+        ncols = Xtr.shape[1]
+        np.savez(ck, oof=oof[va], pred=p, it=it, ncols=ncols)
     pred += p / K
     aucs.append(roc_auc_score(y[va], oof[va]))
     its.append(it)
@@ -152,8 +166,10 @@ for i, (tr, va) in enumerate(fold_idx):
 cv = roc_auc_score(y, oof)
 mean, std = np.mean(aucs), np.std(aucs)
 print(f"{tag} OOF AUC {cv:.5f} | fold mean {mean:.5f} ± {std:.5f} | "
-      f"{time.time() - t0:.0f}s, {Xtr.shape[1]} cols", flush=True)
+      f"{time.time() - t0:.0f}s, {ncols} cols", flush=True)
 save(tag, oof, pred)
+for i in range(K):
+    (PART / f"{tag}__f{i}.npz").unlink(missing_ok=True)
 if LOG:
     with open(ROOT / "experiments.md", "a") as f:
         f.write(f"| {tag} | {NOTE} | {mean:.5f} ± {std:.5f} | {cv:.5f} | "
