@@ -1,0 +1,15 @@
+# competition data never goes into git
+data/
+*.zip
+*.csv
+!submissions/*.csv
+!oof/*.csv
+*.npy
+!oof/*.npy
+!preds/*.npy
+kaggle.json
+catboost_info/
+__pycache__/
+.ipynb_checkpoints/
+logs/*.log
+models/
