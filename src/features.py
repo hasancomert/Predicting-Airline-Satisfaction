@@ -18,6 +18,10 @@ Groups (comma separated on the command line):
          class / business travel / loyal customers, mean age and mean of every rating
   ofd    the same profile computed on the original data, plus the original row count per value
   allcat categorical copies of every numeric column (meant for CatBoost's own CTR encodings)
+  opred  prediction of a LightGBM trained only on the original data (raw columns); the
+         competition labels are never used, so it is leak-free for every fold
+  cnt2   label-free counts (train+test) of every pair of the 20 low-cardinality columns and of
+         Flight Distance x each categorical
 """
 import numpy as np
 import pandas as pd
@@ -94,6 +98,33 @@ def build(groups, train, test, orig=None):
         base = A.iloc[:n_tt]
         for c in ["Flight Distance", "Age", DEP, ARR]:
             F[c + "_cnt"] = A[c].map(base[c].value_counts()).fillna(0)
+    if "opred" in groups:
+        if orig is None:
+            raise ValueError("opred needs the original data")
+        import lightgbm as lgb
+        O = pd.DataFrame({c: orig[c].astype(float) for c in NUMS})
+        Ab = pd.DataFrame({c: A[c].astype(float) for c in NUMS})
+        for c in CATS:
+            cats = sorted(A[c].astype(str).unique())
+            O[c] = pd.Categorical(orig[c].astype(str), categories=cats)
+            Ab[c] = pd.Categorical(A[c].astype(str), categories=cats)
+        O.columns = Ab.columns = [clean(c) for c in O.columns]
+        mdl = lgb.LGBMClassifier(n_estimators=600, learning_rate=0.03, num_leaves=63,
+                                 min_child_samples=20, subsample=0.8, subsample_freq=1,
+                                 colsample_bytree=0.7, random_state=0, verbose=-1)
+        mdl.fit(O, orig[TARGET].astype(int))
+        F["opred"] = mdl.predict_proba(Ab)[:, 1]
+    if "cnt2" in groups:
+        from itertools import combinations
+        base = A.iloc[:n_tt]
+        low = [c for c in COLS if c != "Flight Distance"]
+        code = {c: pd.factorize(A[c].astype(str))[0].astype(np.int64) for c in COLS}
+        pairs = list(combinations(low, 2)) + [("Flight Distance", c) for c in CATS]
+        cnt = {}
+        for a, b in pairs:
+            k = pd.Series(code[a] * (code[b].max() + 1) + code[b])
+            cnt[f"cnt_{clean(a)}__{clean(b)}"] = k.map(k.iloc[:n_tt].value_counts()).fillna(0).values
+        F = pd.concat([F, pd.DataFrame(cnt, index=F.index)], axis=1)
     if "allcat" in groups:
         for c in NUMS:
             F[c + "_c"] = pd.Categorical(A[c].fillna(-1).astype(int))

@@ -52,3 +52,9 @@ Rows are appended by `src/train.py`; the notes column says what changed. Decisio
 
 | Experiment (tag) | Change | CV mean ± std | OOF AUC | avg trees | time | Public LB |
 |---|---|---|---|---|---|---|
+| nn_e8_emb12_h512-256-128_d0.2_orig | MLP: embedding per column + numeric copies, original rows, 8 epochs | 0.95846 ± 0.00054 | 0.95844 | - | 597s | |
+| lgbm_base+te1+tefd+fdprof+cnt+inter+opred_lr0.1_orig | FS1 + opred (LightGBM trained on original data only) | 0.96075 ± 0.00049 | 0.96073 | 151 | 116s | |
+| lgbm_base+te1+tefd+fdprof+cnt+inter+cnt2_lr0.1_orig | FS1 + label-free pair counts | 0.96084 ± 0.00049 | 0.96083 | 147 | 250s | |
+| lgbm_base+te1+tefd+fdprof+cnt+inter+te2_lr0.1_orig | FS2 (FS1 + te2), cached TE: rerun for reference | 0.96085 ± 0.00051 | 0.96084 | 132 | 608s | |
+| lgbm_base+te1+tefd+fdprof+cnt+inter+te2+opred_lr0.1_orig | FS2 + opred | 0.96083 ± 0.00052 | 0.96082 | 114 | 273s | |
+| lgbm_base+te1+tefd+fdprof+cnt+inter+te2+cnt2+opred_lr0.1_orig | FS3 = FS2 + cnt2 + opred | 0.96089 ± 0.00052 | 0.96089 | 84 | 372s | |
