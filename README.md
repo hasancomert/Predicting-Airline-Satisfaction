@@ -46,7 +46,39 @@ yalnız (a) her eğitim katına ek satır (`is_orig` bayrağıyla), (b) orijinal
 
 ## Özellikler (LightGBM, lr 0.1, 5 kat CV)
 
-<!-- FEATURES -->
+Her satır bir öncekinin üstüne eklenir. Kat ortalaması; tek tohum (gürültü std ≈ 0.00005).
+
+| Adım | CV AUC | Fark |
+|---|---|---|
+| Ham kolonlar, LightGBM varsayılanları (100 ağaç) | 0.95780 | |
+| Ham kolonlar, 63 yaprak + erken durdurma (`std`) | 0.95879 | +0.00099 |
+| + `te1`: her kolonun kat içi hedef kodlaması (her kolon kategori gibi) | 0.95997 | +0.00118 |
+| + `tefd`: Flight Distance × diğer her kolonun hedef kodlaması | 0.96018 | +0.00021 |
+| + `fdprof`: mesafe değeri başına etiketsiz profil (Business payı, yaş, puan ortalamaları; train+test) | 0.96020 | |
+| + `cnt` (değer sayımları) + `inter` (Customer Type × Type of Travel × Class) | 0.96021 | |
+| + orijinal satırlar her eğitim katında (`orig=1`, `is_orig` bayrağı) → **FS1** | 0.96052 | +0.00031 |
+| + `te2`: 20 düşük kardinaliteli kolonun bütün ikililerinin hedef kodlaması → **FS2** | 0.96082 | +0.00030 |
+| + `cnt2` (ikili sayımları) + `opred` (orijinalde eğitilmiş modelin tahmini) → **FS3** | 0.96089 | +0.00007 |
+
+Tek başına denenip tutulmayanlar (ham kolonlar üstüne, referans 0.95879):
+
+| Grup | CV | |
+|---|---|---|
+| `afill`: eksik Arrival Delay'i Departure Delay ile doldurma | 0.95876 | gürültü |
+| `delay`: gecikme toplamı / farkı / max / log / oranı, bayraklar | 0.95870 | gürültü |
+| `rnan`: puan 0 → NaN + sıfır sayısı | 0.95880 | gürültü |
+| `zflag`: her puan için 0 bayrağı | 0.95867 | gürültü |
+| `agg`: puan ortalaması / min / max / std / toplam / 5 ve 1 sayıları | 0.95843 | kötü |
+| `grp`: dijital / kabin / hizmet grup ortalamaları ve farkları | 0.95846 | kötü |
+| `rcat`: puanların kategorik kopyası | 0.95866 | gürültü |
+| `tecat`: CT × ToT × Class ve her puanla üçlülerin hedef kodlaması | 0.95876 | gürültü |
+| `omean`: orijinal veride değer başına memnuniyet oranı | 0.95979 (+0.001) | `te1` varken 0 |
+| `ofd`, `omean` FS1 üstüne | 0.96047 / 0.96049 | 0 |
+| `opred` FS2 üstüne | 0.96082 | 0 |
+
+Ağaç modelleri ham puan ve gecikmelerdeki etkileşimleri zaten yakalıyor; elle türetilen toplamlar ve gruplar
+yalnız gürültü ekledi. Kazanç, değerlerin **kimliğini** (özellikle mesafe = rota) hedef kodlamayla ve
+ikililerle vermekten ve orijinal veriden geldi.
 
 ## Modeller
 
