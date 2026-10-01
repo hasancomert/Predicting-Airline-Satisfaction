@@ -64,3 +64,4 @@ Rows are appended by `src/train.py`; the notes column says what changed. Decisio
 | lgbm_base+te1+tefd+fdprof+cnt+inter+te2+cnt2+opred_lr0.03_t1_orig | FINAL: FS3, LGBM t1, lr 0.03 | 0.96131 ± 0.00053 | 0.96130 | 402 | 1026s | |
 | xgb_base+te1+tefd+fdprof+cnt+inter+te2_lr0.03_t1_orig | FINAL: FS2, XGB t1, lr 0.03 | 0.96118 ± 0.00056 | 0.96117 | 536 | 2226s | |
 | cat_base+te1+tefd+fdprof+cnt+inter_lr0.05_orig | FINAL: FS1, CatBoost depth 6, lr 0.05 | 0.96065 ± 0.00057 | 0.96065 | 2576 | 3707s | |
+| lgbm_base+te1+tefd+fdprof+cnt+inter+te2_lr0.03_t1_orig_s7 | FINAL: FS2, LGBM t1, lr 0.03, seed 7 | 0.96122 ± 0.00050 | 0.96122 | 536 | 765s | |
