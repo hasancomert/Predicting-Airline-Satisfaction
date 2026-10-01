@@ -47,6 +47,7 @@ Rows are appended by `src/train.py`; the notes column says what changed. Decisio
 | # | File | Content | CV (OOF) | Nested CV | Public LB |
 |---|---|---|---|---|---|
 | 1 | s01_blend_lr0.1_lgbmFS1-catFS1-lgbmFS2.csv | rank hill-climb: LGBM FS1 0.25, CatBoost FS1 0.25, LGBM FS2 0.5 (all lr 0.1) | 0.96113 | 0.96113 | 0.96059 |
+| 2 | s02_logitstack_lgbmFS3-xgbFS2-lr0.03_lgbm-xgb-cat-lr0.1_glm_nn.csv | logistic stacking on logit(p) of 7 models: LGBM FS3 t1 lr0.03 (0.567), XGB FS2 t1 lr0.03 (0.182), CatBoost FS1 lr0.1 (0.161), MLP (0.061), GLM (0.038), LGBM FS2 t1 lr0.1 (0.009), XGB FS1 t1 lr0.1 (-0.027) | 0.96147 | 0.96146 | 0.96087 |
 
 ## Model runs (continued)
 
