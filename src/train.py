@@ -44,6 +44,7 @@ NOTE = opts.pop("note", "")
 LOG = int(opts.pop("log", 1))
 NAME = opts.pop("name", None)
 THREADS = int(opts.pop("threads", 4))
+SKIP = int(opts.pop("skip", 1))  # skip the run when its OOF file already exists (restart-safe)
 
 need_orig = USE_ORIG or bool({"omean", "ofd"} & set(groups))
 if need_orig:
@@ -78,6 +79,14 @@ def fold_data(i, tr, va):
     return Xtr, ytr, Xva, Xte
 
 
+# tuned presets (Optuna, src/tune.py, 2 folds of FS1 + original rows, lr 0.1)
+TUNED = {
+    ("lgbm", "t1"): dict(num_leaves=112, max_depth=-1, min_child_samples=9, subsample=0.9723,
+                         colsample_bytree=0.4592, reg_lambda=18.50, reg_alpha=0.005066,
+                         min_split_gain=0.001176, max_bin=511, cat_smooth=1.75),
+}
+
+
 def lgbm(Xtr, ytr, Xva, yva, Xte):
     if PRESET == "default":  # library defaults (100 trees, lr 0.1, 31 leaves), no early stopping
         mdl = lgb.LGBMClassifier(random_state=MSEED, verbose=-1, n_jobs=THREADS, **opts)
@@ -86,6 +95,7 @@ def lgbm(Xtr, ytr, Xva, yva, Xte):
     p = dict(n_estimators=20000, learning_rate=LR, num_leaves=63, min_child_samples=50,
              subsample=0.8, subsample_freq=1, colsample_bytree=0.5, reg_lambda=1.0,
              max_bin=255, cat_smooth=10)
+    p.update(TUNED.get(("lgbm", PRESET), {}))
     p.update(opts)
     mdl = lgb.LGBMClassifier(random_state=MSEED, verbose=-1, n_jobs=THREADS, **p)
     mdl.fit(Xtr, ytr, eval_set=[(Xva, yva)], eval_metric="auc",
@@ -96,6 +106,7 @@ def lgbm(Xtr, ytr, Xva, yva, Xte):
 def xgbm(Xtr, ytr, Xva, yva, Xte):
     p = dict(n_estimators=20000, learning_rate=LR, max_depth=6, min_child_weight=5,
              subsample=0.8, colsample_bytree=0.5, reg_lambda=1.0, max_bin=256)
+    p.update(TUNED.get(("xgb", PRESET), {}))
     p.update(opts)
     mdl = xgb.XGBClassifier(tree_method="hist", enable_categorical=True, max_cat_to_onehot=4,
                             eval_metric="auc", early_stopping_rounds=max(50, int(20 / LR)),
@@ -107,6 +118,7 @@ def xgbm(Xtr, ytr, Xva, yva, Xte):
 def cat(Xtr, ytr, Xva, yva, Xte):
     s = lambda d: d.astype({c: str for c in CATCOLS})
     p = dict(depth=6, border_count=254, l2_leaf_reg=3)
+    p.update(TUNED.get(("cat", PRESET), {}))
     p.update(opts)
     mdl = CatBoostClassifier(iterations=20000, learning_rate=LR, eval_metric="AUC",
                              od_type="Iter", od_wait=max(100, int(20 / LR)), cat_features=CATCOLS,
@@ -123,6 +135,9 @@ tag = NAME or "_".join(x for x in [model_name, "+".join(groups), f"lr{LR}", PRES
                                    "orig" if USE_ORIG else "", extra,
                                    f"s{MSEED}" if MSEED != SEED else "",
                                    f"k{K}" if K != FOLDS else ""] if x)
+if SKIP and (ROOT / "oof" / f"{tag}.npy").exists():
+    print(f"{tag}: already done, skipping (skip=0 to rerun)")
+    sys.exit(0)
 print(f"{tag}: {X.shape[1]} features, {len(KEYS.columns) if KEYS is not None else 0} TE keys",
       flush=True)
 t0 = time.time()
