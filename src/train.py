@@ -63,7 +63,31 @@ X_orig = F.iloc[n + m:].reset_index(drop=True) if USE_ORIG else None
 fold_idx = folds(y, K)
 
 
-def fold_data(tr, va):
+CACHE = ROOT / "cache"
+
+
+def te_block(i, ktr, ytr, va):
+    """In-fold target encodings of every key column for fold i, cached per column on disk
+    (each column is encoded independently, so a cached column is reused by any group set)."""
+    CACHE.mkdir(exist_ok=True)
+    cols = list(KEYS.columns)
+    tag = f"o{USE_ORIG}_k{K}_f{i}"
+    path = lambda c: CACHE / f"{c}__{tag}.npy"
+    missing = [c for c in cols if not path(c).exists()]
+    if missing:
+        enc = TargetEncoder(target_type="binary", cv=5, shuffle=True, random_state=SEED)
+        k = KEYS[missing].to_numpy()
+        parts = (enc.fit_transform(k[ktr], ytr), enc.transform(k[va]), enc.transform(k[n:n + m]))
+        for j, c in enumerate(missing):
+            tmp = CACHE / f"{c}__{tag}.{MSEED}.tmp.npy"
+            np.save(tmp, np.concatenate([p[:, j] for p in parts]).astype(np.float32))
+            tmp.rename(path(c))
+    M = np.column_stack([np.load(path(c)) for c in cols])
+    a, b = len(ktr), len(ktr) + len(va)
+    return cols, M[:a], M[a:b], M[b:]
+
+
+def fold_data(i, tr, va):
     Xtr, ytr, ktr = X.iloc[tr], y[tr], tr
     if USE_ORIG:
         Xtr = pd.concat([Xtr, X_orig], ignore_index=True)
@@ -71,14 +95,10 @@ def fold_data(tr, va):
         ktr = np.r_[tr, np.arange(n + m, n + m + len(orig))]
     Xva, Xte = X.iloc[va], X_test
     if KEYS is not None:
-        enc = TargetEncoder(target_type="binary", cv=5, shuffle=True, random_state=SEED)
-        cols = list(KEYS.columns)
-        k = KEYS.to_numpy()
+        cols, etr, eva, ete = te_block(i, ktr, ytr, va)
         add = lambda d, e: pd.concat([d.reset_index(drop=True), pd.DataFrame(e, columns=cols)],
                                      axis=1)
-        Xtr = add(Xtr, enc.fit_transform(k[ktr], ytr))
-        Xva = add(Xva, enc.transform(k[va]))
-        Xte = add(Xte, enc.transform(k[n:n + m]))
+        Xtr, Xva, Xte = add(Xtr, etr), add(Xva, eva), add(Xte, ete)
     return Xtr, ytr, Xva, Xte
 
 
@@ -132,7 +152,7 @@ print(f"{tag}: {X.shape[1]} features, {len(KEYS.columns) if KEYS is not None els
 t0 = time.time()
 oof, pred, aucs, its = np.zeros(n), np.zeros(m), [], []
 for i, (tr, va) in enumerate(fold_idx):
-    Xtr, ytr, Xva, Xte = fold_data(tr, va)
+    Xtr, ytr, Xva, Xte = fold_data(i, tr, va)
     oof[va], p, it = fit(Xtr, ytr, Xva, y[va], Xte)
     pred += p / K
     aucs.append(roc_auc_score(y[va], oof[va]))

@@ -36,3 +36,6 @@ Rows are appended by `src/train.py`; the notes column says what changed. Decisio
 | lgbm_base+te1+tefd+fdprof+cnt+inter_lr0.1 | te1 + tefd + fdprof + cnt + inter | 0.96021 ± 0.00054 | 0.96018 | 157 | 163s | |
 | lgbm_base+te1+tefd+fdprof_lr0.1_orig | te1 + tefd + fdprof + original rows | 0.96031 ± 0.00056 | 0.96031 | 212 | 223s | |
 | lgbm_base+te1+tefd+fdprof+cnt+inter_lr0.1_orig | te1 + tefd + fdprof + cnt + inter + original rows | 0.96052 ± 0.00059 | 0.96052 | 207 | 217s | |
+| lgbm_base+te1+tefd+fdprof+cnt+inter+ofd_lr0.1_orig | FS1 + ofd (original per-FD profile) | 0.96048 ± 0.00054 | 0.96047 | 188 | 351s | |
+| lgbm_base+te1+tefd+fdprof+cnt+inter+omean_lr0.1_orig | FS1 + omean | 0.96050 ± 0.00060 | 0.96049 | 176 | 275s | |
+| lgbm_base+te1+tefd+fdprof+cnt+inter+te2_lr0.1_orig | FS1 + TE of all low-card column pairs | 0.96082 ± 0.00055 | 0.96082 | 116 | 591s | |
