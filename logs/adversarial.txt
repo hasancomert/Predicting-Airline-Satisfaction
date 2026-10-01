@@ -1,0 +1,4 @@
+train vs test: adversarial AUC 0.50024
+  top gain: {'Flight Distance': 0.177, 'Age': 0.146, 'Arrival Delay in Minutes': 0.066, 'Departure Delay in Minutes': 0.058, 'Checkin service': 0.051, 'Gate location': 0.046}
+train vs original: adversarial AUC 0.83372
+  top gain: {'Arrival Delay in Minutes': 0.357, 'Flight Distance': 0.263, 'Departure Delay in Minutes': 0.187, 'Age': 0.034, 'Ease of Online booking': 0.015, 'Class': 0.015}
