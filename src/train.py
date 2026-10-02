@@ -45,6 +45,7 @@ NOTE = opts.pop("note", "")
 LOG = int(opts.pop("log", 1))
 NAME = opts.pop("name", None)
 THREADS = int(opts.pop("threads", 4))
+DEVICE = opts.pop("device", None)  # e.g. cuda for XGBoost on a Kaggle GPU; not part of the tag
 SKIP = int(opts.pop("skip", 1))  # skip the run when its OOF file already exists (restart-safe)
 
 need_orig = USE_ORIG or bool({"omean", "ofd"} & set(groups))
@@ -116,6 +117,8 @@ def xgbm(Xtr, ytr, Xva, yva, Xte):
              subsample=0.8, colsample_bytree=0.5, reg_lambda=1.0, max_bin=256)
     p.update(TUNED.get(("xgb", PRESET), {}))
     p.update(opts)
+    if DEVICE:
+        p["device"] = DEVICE
     mdl = xgb.XGBClassifier(tree_method="hist", enable_categorical=True, max_cat_to_onehot=4,
                             eval_metric="auc", early_stopping_rounds=max(50, int(20 / LR)),
                             random_state=MSEED, n_jobs=THREADS, **p)

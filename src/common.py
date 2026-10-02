@@ -1,4 +1,5 @@
 """Shared constants, data loading and the fixed CV split used by every model."""
+import os
 from pathlib import Path
 
 import numpy as np
@@ -6,7 +7,7 @@ import pandas as pd
 from sklearn.model_selection import StratifiedKFold
 
 ROOT = Path(__file__).resolve().parent.parent
-DATA = ROOT / "data"
+DATA = Path(os.environ.get("DATA_DIR", ROOT / "data"))
 OOF_DIR, PRED_DIR, SUB_DIR = ROOT / "oof", ROOT / "preds", ROOT / "submissions"
 
 SEED, FOLDS = 42, 5

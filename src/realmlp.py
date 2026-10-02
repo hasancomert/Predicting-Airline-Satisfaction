@@ -3,7 +3,8 @@ the net learns one embedding per distinct value (per route for Flight Distance).
 follow the public PS-S6E10 RealMLP notebook (yekenot); feature views are ours.
 
 Usage: python src/realmlp.py [feats=pub|v4] [epochs=3] [n_ens=8] [seed=42] [te=te1,tefd]
-                             [folds=0,1,2,3,4] [device=cpu] [threads=4] [name=<tag>] [note=...]
+                             [k=5] [only=0,1,..] [device=cpu] [threads=4] [name=<tag>] [note=...]
+  k     number of folds (StratifiedKFold(k, shuffle, seed 42)); only: run a subset of folds
   pub  raw columns + categorical twins
   v4   pub + label-free route profile (fdprof) + value counts (cnt) + original-model logit (opred)
        + in-fold target encodings (te=...; same cache as train.py, original rows not used)
@@ -31,7 +32,8 @@ FEATS = opts.get("feats", "pub")
 EPOCHS, N_ENS, SEED = int(opts.get("epochs", 3)), int(opts.get("n_ens", 8)), int(opts.get("seed", 42))
 TE = [t for t in opts.get("te", "te1" if FEATS == "v4" else "").split(",") if t]
 DEVICE, NOTE = opts.get("device", "cpu"), opts.get("note", "")
-ONLY = [int(f) for f in opts.get("folds", "0,1,2,3,4").split(",")]
+K = int(opts.get("k", 5))
+ONLY = [int(f) for f in opts.get("only", ",".join(map(str, range(K)))).split(",")]
 torch.set_num_threads(int(opts.get("threads", 4)))
 
 REALMLP = dict(
@@ -76,7 +78,7 @@ KEYS = te_keys(TE, train, test) if TE else None
 
 tag = opts.get("name", f"realmlp_{FEATS}_e{EPOCHS}_ens{N_ENS}"
                        f"{'_' + '+'.join(TE) if TE and FEATS != 'v4' else ''}"
-                       f"{f'_s{SEED}' if SEED != 42 else ''}")
+                       f"{f'_s{SEED}' if SEED != 42 else ''}{f'_k{K}' if K != 5 else ''}")
 if (ROOT / "oof" / f"{tag}.npy").exists():
     print(f"{tag}: already done, skipping")
     sys.exit(0)
@@ -86,7 +88,7 @@ PART = ROOT / "cache" / "partial"
 PART.mkdir(parents=True, exist_ok=True)
 t0 = time.time()
 oof, pred, aucs = np.zeros(n), np.zeros(m), []
-for i, (tr, va) in enumerate(folds(y)):
+for i, (tr, va) in enumerate(folds(y, K)):
     if i not in ONLY:
         continue
     ck = PART / f"{tag}__f{i}.npz"
@@ -98,7 +100,7 @@ for i, (tr, va) in enumerate(folds(y)):
         Xa, Xb, Xt = X.iloc[tr].reset_index(drop=True), X.iloc[va].reset_index(drop=True), \
             X.iloc[n:].reset_index(drop=True)
         if KEYS is not None:
-            cols, etr, eva, ete = te_block(KEYS, i, tr, y[tr], va, n, m, 0, 5)
+            cols, etr, eva, ete = te_block(KEYS, i, tr, y[tr], va, n, m, 0, K)
             for j, c in enumerate(cols):
                 Xa[c], Xb[c], Xt[c] = etr[:, j], eva[:, j], ete[:, j]
         mdl = RealMLP_TD_Classifier(**REALMLP, device=DEVICE, random_state=SEED + i,
@@ -110,14 +112,14 @@ for i, (tr, va) in enumerate(folds(y)):
     pred += p / len(ONLY)
     aucs.append(roc_auc_score(y[va], oof[va]))
     print(f"  fold {i}: {aucs[-1]:.5f} ({time.time() - t0:.0f}s)", flush=True)
-if len(ONLY) < 5:
+if len(ONLY) < K:
     print(f"{tag}: folds {ONLY} mean {np.mean(aucs):.5f} (partial run, nothing saved)")
     sys.exit(0)
 cv = roc_auc_score(y, oof)
 print(f"{tag} OOF AUC {cv:.5f} | fold mean {np.mean(aucs):.5f} ± {np.std(aucs):.5f} | "
       f"{time.time() - t0:.0f}s", flush=True)
 save(tag, oof, pred)
-for i in range(5):
+for i in range(K):
     (PART / f"{tag}__f{i}.npz").unlink(missing_ok=True)
 with open(ROOT / "experiments.md", "a") as f:
     f.write(f"| {tag} | {NOTE} | {np.mean(aucs):.5f} ± {np.std(aucs):.5f} | {cv:.5f} | - | "
