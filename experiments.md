@@ -82,3 +82,4 @@ Rows are appended by `src/train.py`; the notes column says what changed. Decisio
 | nn_e12_emb16_h512-256-128_d0.2_orig_s51 | MLP 12 ep, emb 16, seed 51 | 0.95904 ± 0.00061 | 0.95901 | - | 1213s | |
 | cat_base+te1+tefd+fdprof+cnt+inter+te2_lr0.08_orig | FS2, CatBoost depth 6, lr 0.08 | 0.96096 ± 0.00049 | 0.96096 | 1401 | 4971s | |
 | lgbm_base+cnt+inter+fdprof_lr0.03_t1_orig | no-TE LGBM (raw + counts + interactions + FD profile), t1, lr 0.03 | 0.96098 ± 0.00050 | 0.96098 | 1005 | 798s | |
+| glm_pairsall_fd1_C0.03 | Sparse LR, C 0.03 | 0.95805 ± 0.00066 | 0.95805 | - | 202s | |
