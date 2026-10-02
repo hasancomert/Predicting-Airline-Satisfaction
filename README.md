@@ -203,7 +203,7 @@ Gözlemler:
 | 3 | `s03_final.csv` | 8 aile, lojistik istifleme | 0.96159 | 0.96160 | 0.96106 |
 | 3-alt | `s03alt_rankavg_8families.csv` | 8 ailenin eşit sıra ortalaması | 0.96153 | 0.96153 | 0.96092 |
 | 4 | `s04_hill_6fam_realmlp.csv` | RealMLP eklendi; hill climbing 6 aileyi eşit ağırlıkla seçti | 0.96165 | 0.96165 | 0.96107 |
-| 5 | `s05_k10_hill_8fam.csv` (hazır) | 10 kat, 8 aile (RealMLP v4+te2 dahil), hill climbing | 0.96182 | 0.96181 | |
+| 5 | `s05_k10_hill_8fam.csv` | 10 kat, 8 aile (RealMLP v4+te2 dahil), hill climbing | 0.96182 | 0.96181 | 0.96114 |
 
 Public LB CV'nin yaklaşık 0.0006 altında. 1 → 2 adımında CV +0.00033 iken public +0.00028 arttı. Public kısım
 test'in küçük bir parçası; 140 bin satırlık kat std'si 0.0006 olduğundan, public skorun std'si 0.001'e yakın.
