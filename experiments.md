@@ -78,3 +78,4 @@ Rows are appended by `src/train.py`; the notes column says what changed. Decisio
 | nn_e12_emb16_h512-256-128_d0.2_orig_s7 | MLP 12 ep, emb 16, seed 7 | 0.95902 ± 0.00047 | 0.95897 | - | 712s | |
 | nn_e12_emb16_h512-256-128_d0.2_orig_s11 | MLP 12 ep, emb 16, seed 11 | 0.95889 ± 0.00063 | 0.95888 | - | 1148s | |
 | nn_e12_emb16_h512-256-128_d0.2_orig_s23 | MLP 12 ep, emb 16, seed 23 | 0.95896 ± 0.00070 | 0.95891 | - | 1187s | |
+| nn_e12_emb16_h512-256-128_d0.2_orig_s37 | MLP 12 ep, emb 16, seed 37 | 0.95911 ± 0.00057 | 0.95907 | - | 1189s | |
