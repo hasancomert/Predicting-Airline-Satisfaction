@@ -66,3 +66,5 @@ Rows are appended by `src/train.py`; the notes column says what changed. Decisio
 | cat_base+te1+tefd+fdprof+cnt+inter_lr0.05_orig | FINAL: FS1, CatBoost depth 6, lr 0.05 | 0.96065 ± 0.00057 | 0.96065 | 2576 | 3707s | |
 | lgbm_base+te1+tefd+fdprof+cnt+inter+te2_lr0.03_t1_orig_s7 | FINAL: FS2, LGBM t1, lr 0.03, seed 7 | 0.96122 ± 0.00050 | 0.96122 | 536 | 765s | |
 | xgb_base+te1+tefd+fdprof+cnt+inter+te2+cnt2+opred_lr0.03_t1_orig | FS3, XGB t1, lr 0.03 | 0.96130 ± 0.00057 | 0.96129 | 383 | 2973s | |
+| lgbm_base+te1+tefd+fdprof+cnt+inter+te2+te3_lr0.1_t1_orig | FS2 + te3 (56+3 triples of the strongest columns), LGBM t1 | 0.96106 ± 0.00058 | 0.96105 | 107 | 413s | |
+| nn_e12_emb16_h512-256-128_d0.2_orig | MLP, 12 epochs, emb 16 | 0.95910 ± 0.00058 | 0.95907 | - | 713s | |

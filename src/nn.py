@@ -2,7 +2,8 @@
 copies. Same 5 folds; the epoch with the best validation AUC is kept (like early stopping).
 
 Usage: python src/nn.py [epochs=8] [bs=2048] [lr=2e-3] [emb=12] [hidden=512,256,128]
-                        [drop=0.2] [orig=0] [seed=42] [name=<tag>] [note=...]
+                        [drop=0.2] [orig=0] [seed=42] [te=te1,tefd] [name=<tag>] [note=...]
+  te  in-fold target encodings (same cache as train.py) added as standardized logit inputs
 """
 import sys
 import time
@@ -14,6 +15,8 @@ import torch.nn as nn
 from sklearn.metrics import roc_auc_score
 
 from common import COLS, DELAYS, RATINGS, ROOT, folds, load, save
+from features import te_keys
+from te_cache import te_block
 
 opts = dict(a.split("=", 1) for a in sys.argv[1:])
 EPOCHS, BS = int(opts.get("epochs", 8)), int(opts.get("bs", 2048))
@@ -21,6 +24,7 @@ LR, EMB = float(opts.get("lr", 2e-3)), int(opts.get("emb", 12))
 HID = [int(h) for h in opts.get("hidden", "512,256,128").split(",")]
 DROP, USE_ORIG = float(opts.get("drop", 0.2)), int(opts.get("orig", 0))
 SEED, NOTE = int(opts.get("seed", 42)), opts.get("note", "")
+TE = [t for t in opts.get("te", "").split(",") if t]
 torch.set_num_threads(int(opts.get("threads", 4)))
 
 if USE_ORIG:
@@ -51,13 +55,29 @@ for c in RATINGS:
 num["arr_nan"] = (A["Arrival Delay in Minutes"] < 0).astype(float)
 num = ((num - num.iloc[:n].mean()) / num.iloc[:n].std()).to_numpy(np.float32)
 cat_t, num_t = torch.from_numpy(cat), torch.from_numpy(num)
+KEYS = te_keys(TE, train, test, orig if USE_ORIG else None) if TE else None
+N_TE = KEYS.shape[1] if KEYS is not None else 0
+
+
+def fold_num(i, tr, va):
+    """Numeric inputs for fold i: base columns plus the fold's target encodings (as logits)."""
+    if KEYS is None:
+        return num_t
+    ktr = np.r_[tr, np.arange(n + m, len(A))] if USE_ORIG else tr
+    yk = np.r_[y[tr], yo] if USE_ORIG else y[tr]
+    _, etr, eva, ete = te_block(KEYS, i, ktr, yk, va, n, m, USE_ORIG, 5)
+    E = np.zeros((len(A), N_TE), dtype=np.float32)
+    E[ktr], E[va], E[n:n + m] = etr, eva, ete
+    E = np.log(np.clip(E, 1e-4, 1 - 1e-4) / (1 - np.clip(E, 1e-4, 1 - 1e-4)))
+    mu, sd = E[ktr].mean(0), E[ktr].std(0) + 1e-6
+    return torch.from_numpy(np.concatenate([num, (E - mu) / sd], axis=1).astype(np.float32))
 
 
 class Net(nn.Module):
     def __init__(self):
         super().__init__()
         self.embs = nn.ModuleList([nn.Embedding(k, min(EMB, k + 1)) for k in cards])
-        d = sum(e.embedding_dim for e in self.embs) + num.shape[1]
+        d = sum(e.embedding_dim for e in self.embs) + num.shape[1] + N_TE
         layers = []
         for h in HID:
             layers += [nn.Linear(d, h), nn.BatchNorm1d(h), nn.SiLU(), nn.Dropout(DROP)]
@@ -80,12 +100,14 @@ def predict(model, idx):
 
 
 tag = opts.get("name", f"nn_e{EPOCHS}_emb{EMB}_h{'-'.join(map(str, HID))}_d{DROP}"
+                       f"{'_' + '+'.join(TE) if TE else ''}"
                        f"{'_orig' if USE_ORIG else ''}{f'_s{SEED}' if SEED != 42 else ''}")
 print(tag, flush=True)
 t0 = time.time()
 oof, pred, aucs = np.zeros(n), np.zeros(m), []
 test_idx = torch.arange(n, n + m)
 for i, (tr, va) in enumerate(folds(y)):
+    num_t = fold_num(i, tr, va)
     torch.manual_seed(SEED + i)
     rng = np.random.default_rng(SEED + i)
     tr_idx = np.r_[tr, np.arange(n + m, len(A))] if USE_ORIG else tr

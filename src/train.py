@@ -40,6 +40,7 @@ MSEED = int(opts.pop("seed", SEED))
 K = int(opts.pop("folds", FOLDS))
 PRESET = opts.pop("preset", "std")
 USE_ORIG = int(opts.pop("orig", 0))
+OW = float(opts.pop("ow", 1.0))  # sample weight of the original rows
 NOTE = opts.pop("note", "")
 LOG = int(opts.pop("log", 1))
 NAME = opts.pop("name", None)
@@ -101,7 +102,7 @@ def lgbm(Xtr, ytr, Xva, yva, Xte):
     p.update(TUNED.get(("lgbm", PRESET), {}))
     p.update(opts)
     mdl = lgb.LGBMClassifier(random_state=MSEED, verbose=-1, n_jobs=THREADS, **p)
-    mdl.fit(Xtr, ytr, eval_set=[(Xva, yva)], eval_metric="auc",
+    mdl.fit(Xtr, ytr, sample_weight=W, eval_set=[(Xva, yva)], eval_metric="auc",
             callbacks=[lgb.early_stopping(max(50, int(20 / LR)), verbose=False)])
     return mdl.predict_proba(Xva)[:, 1], mdl.predict_proba(Xte)[:, 1], mdl.best_iteration_
 
@@ -114,7 +115,7 @@ def xgbm(Xtr, ytr, Xva, yva, Xte):
     mdl = xgb.XGBClassifier(tree_method="hist", enable_categorical=True, max_cat_to_onehot=4,
                             eval_metric="auc", early_stopping_rounds=max(50, int(20 / LR)),
                             random_state=MSEED, n_jobs=THREADS, **p)
-    mdl.fit(Xtr, ytr, eval_set=[(Xva, yva)], verbose=False)
+    mdl.fit(Xtr, ytr, sample_weight=W, eval_set=[(Xva, yva)], verbose=False)
     return mdl.predict_proba(Xva)[:, 1], mdl.predict_proba(Xte)[:, 1], mdl.best_iteration
 
 
@@ -127,7 +128,7 @@ def cat(Xtr, ytr, Xva, yva, Xte):
                              od_type="Iter", od_wait=max(100, int(20 / LR)), cat_features=CATCOLS,
                              random_seed=MSEED, verbose=0, allow_writing_files=False,
                              thread_count=THREADS, **p)
-    mdl.fit(s(Xtr), ytr, eval_set=(s(Xva), yva), use_best_model=True)
+    mdl.fit(s(Xtr), ytr, sample_weight=W, eval_set=(s(Xva), yva), use_best_model=True)
     return (mdl.predict_proba(s(Xva))[:, 1], mdl.predict_proba(s(Xte))[:, 1],
             mdl.get_best_iteration())
 
@@ -135,7 +136,8 @@ def cat(Xtr, ytr, Xva, yva, Xte):
 fit = {"lgbm": lgbm, "xgb": xgbm, "cat": cat}[model_name]
 extra = "_".join(f"{k}{v}" for k, v in sorted(opts.items()))
 tag = NAME or "_".join(x for x in [model_name, "+".join(groups), f"lr{LR}", PRESET if PRESET != "std" else "",
-                                   "orig" if USE_ORIG else "", extra,
+                                   "orig" if USE_ORIG else "", f"ow{OW:g}" if OW != 1 else "",
+                                   extra,
                                    f"s{MSEED}" if MSEED != SEED else "",
                                    f"k{K}" if K != FOLDS else ""] if x)
 if SKIP and (ROOT / "oof" / f"{tag}.npy").exists():
@@ -156,6 +158,7 @@ for i, (tr, va) in enumerate(fold_idx):
         print(f"  fold {i}: resumed from checkpoint", flush=True)
     else:
         Xtr, ytr, Xva, Xte = fold_data(i, tr, va)
+        W = np.r_[np.ones(len(tr)), np.full(len(ytr) - len(tr), OW)] if USE_ORIG else None
         oof[va], p, it = fit(Xtr, ytr, Xva, y[va], Xte)
         ncols = Xtr.shape[1]
         np.savez(ck, oof=oof[va], pred=p, it=it, ncols=ncols)
