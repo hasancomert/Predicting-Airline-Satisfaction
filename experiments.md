@@ -110,3 +110,7 @@ Rows are appended by `src/train.py`; the notes column says what changed. Decisio
 | lgbm_base+te1+tefd+fdprof+cnt+inter+te2+cnt2+opred_lr0.03_t1_orig_k10 | 10-fold: FS3 LGBM t1 lr0.03 | 0.96145 ± 0.00067 | 0.96144 | 483 | 2763s | |
 | xgb_base+te1+tefd+fdprof+cnt+inter+te2+cnt2+opred_lr0.03_t1_orig_k10 | 10-fold: FS3 XGB t1 lr0.03 (Kaggle GPU) | 0.96149 ± 0.00065 | 0.96148 | 512 | 2718s | |
 | xgb_base+te1+tefd+fdprof+cnt+inter+te2+cnt2+opred_lr0.03_t1_orig_s7_k10 | 10-fold: FS3 XGB t1 lr0.03 seed 7 (Kaggle GPU) | 0.96145 ± 0.00067 | 0.96145 | 479 | 2686s | |
+| realmlp_pub_e3_ens8_k10 | 10-fold: RealMLP pub e3 (Kaggle GPU) | 0.96089 ± 0.00066 | 0.96088 | - | 1034s | |
+| realmlp_v4_e6_ens8_k10 | 10-fold: RealMLP v4 e6 (Kaggle GPU) | 0.96129 ± 0.00061 | 0.96124 | - | 2025s | |
+| realmlp_pub_e6_ens8_s1_k10 | 10-fold: RealMLP pub e6 s1 (Kaggle GPU) | 0.96111 ± 0.00070 | 0.96110 | - | 1758s | |
+| realmlp_v4_e6_ens8_s1_k10 | 10-fold: RealMLP v4 e6 s1 (Kaggle GPU) | 0.96129 ± 0.00061 | 0.96125 | - | 1985s | |
