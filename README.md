@@ -82,7 +82,36 @@ ikililerle vermekten ve orijinal veriden geldi.
 
 ## Modeller
 
-<!-- MODELS -->
+Tüm modeller aynı 5 katta, orijinal satırlar eğitim katlarında. Süreler 4 çekirdekli CPU'da.
+
+| Model | Özellikler | Ayar | CV (OOF AUC) | Süre |
+|---|---|---|---|---|
+| LightGBM | FS3 (473 kolon) | `t1`, lr 0.03 | **0.96130** (ikinci tohum 0.96130) | 17–21 dk |
+| XGBoost | FS3 | `t1`, lr 0.03 | 0.96129 | 50 dk |
+| LightGBM | FS2 (278 kolon) | `t1`, lr 0.03, tohum 7 | 0.96122 | 13 dk |
+| XGBoost | FS2 | `t1`, lr 0.03 | 0.96117 | 37 dk |
+| CatBoost | FS1 (88 kolon) | derinlik 6, lr 0.05 | 0.96065 | 62 dk |
+| MLP | ham 21 kolon: her biri gömme + sayısal kopyalar | 12 epoch, 3 tohum ortalaması | 0.95992 (tek tohum 0.9590–0.9591) | 12 dk / tohum |
+| MLP + TE girdileri | + te1, tefd, te2 (logit, standart) | 12 epoch | 0.95980 | 15 dk |
+| Seyrek lojistik regresyon | her değer + 190 kolon ikilisi + FD × kategorik, one-hot | C = 0.1 | 0.95802 | 5 dk |
+
+**Ayar (Optuna, `src/tune.py`).** FS1 üzerinde, 5 katın ilk 2'sinde, lr 0.1 ile; LightGBM 30, XGBoost 18 deneme.
+
+| | std ayar (2 kat) | en iyi deneme (2 kat) | 5 kat, lr 0.1 |
+|---|---|---|---|
+| LightGBM `t1`: 112 yaprak, min_child_samples 9, subsample 0.97, colsample 0.46, λ 18.5, max_bin 511 | 0.96009 | 0.96039 | FS1 0.96052 → 0.96074, FS2 0.96084 → 0.96098 |
+| XGBoost `t1`: derinlik 10, min_child_weight 83, subsample 0.90, colsample 0.44, α 0.55, max_bin 1024 | 0.95985 | 0.96032 | FS1 0.96028 → 0.96053 |
+
+Öğrenme oranı 0.1 → 0.03: LightGBM FS3 0.96089 (std) → 0.96130 (t1); XGBoost FS2 0.96053 (FS1, lr 0.1) → 0.96117.
+CatBoost lr 0.1 → 0.05: 0.96054 → 0.96065.
+
+İşe yaramayanlar (model düzeyi):
+
+- Orijinal satır ağırlığı 0.5 ya da 2 (FS1 t1: 0.96074 → 0.96063 / 0.96065).
+- `te3` (en güçlü 8 kolonun 56 üçlüsü + 3 FD üçlüsü): FS2 t1 lr 0.1, 0.96098 → 0.96105, gürültü sınırında.
+- CatBoost'ta her kolonu kategorik vermek (CTR birleşimleri): 4 çekirdekte bir kat 25 dakikada bitmedi, durduruldu.
+- MLP'ye hedef kodlamaları girdi olarak vermek tek başına daha iyi (0.9591 → 0.9598) ama harmanda ağırlık
+  almadı (0.003): GBDT'lere fazla benziyor. Harmana katkıyı ham girdili MLP veriyor.
 
 ## Ensemble
 
