@@ -154,6 +154,10 @@ diske önbelleklenmeden aynı kodla hesaplanır, değerler birebir aynıdır).
 
 Ortalama kazanç model başına +0.0001–0.0002, önceki yarışmadaki 5 → 10 kat gözlemiyle uyumlu.
 
+10 katta yeni bir üye de eklendi: RealMLP v4'e `te2` ikili kodlamalarını da girdi olarak vermek (3 tohum
+0.96143 / 0.96144 / 0.96145; ortalaması 0.96153) en güçlü sinir ağı oldu. 10 katlı 8 aile harmanı: hill climbing
+iç içe 0.96181, eşit sıra ortalaması 0.96180, lojistik istifleme 0.96180 (s04: 0.96165).
+
 ## Ensemble
 
 `src/blend.py` dört yöntemi aynı aday listesinde karşılaştırır ve iç içe CV'ye göre seçer: tekrar seçilebilir
@@ -199,6 +203,7 @@ Gözlemler:
 | 3 | `s03_final.csv` | 8 aile, lojistik istifleme | 0.96159 | 0.96160 | 0.96106 |
 | 3-alt | `s03alt_rankavg_8families.csv` | 8 ailenin eşit sıra ortalaması | 0.96153 | 0.96153 | 0.96092 |
 | 4 | `s04_hill_6fam_realmlp.csv` | RealMLP eklendi; hill climbing 6 aileyi eşit ağırlıkla seçti | 0.96165 | 0.96165 | 0.96107 |
+| 5 | `s05_k10_hill_8fam.csv` (hazır) | 10 kat, 8 aile (RealMLP v4+te2 dahil), hill climbing | 0.96182 | 0.96181 | |
 
 Public LB CV'nin yaklaşık 0.0006 altında. 1 → 2 adımında CV +0.00033 iken public +0.00028 arttı. Public kısım
 test'in küçük bir parçası; 140 bin satırlık kat std'si 0.0006 olduğundan, public skorun std'si 0.001'e yakın.
