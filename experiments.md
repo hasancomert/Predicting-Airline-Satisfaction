@@ -76,3 +76,4 @@ Rows are appended by `src/train.py`; the notes column says what changed. Decisio
 | nn_e12_emb16_h512-256-128_d0.2_te1+tefd+te2_orig | MLP 12 ep + TE inputs (te1, tefd, te2) | 0.95984 ± 0.00056 | 0.95980 | - | 882s | |
 | nn_e16_emb24_h1024-512-256_d0.25_orig | MLP 16 ep, emb 24, 1024-512-256 | 0.95917 ± 0.00047 | 0.95910 | - | 1938s | |
 | nn_e12_emb16_h512-256-128_d0.2_orig_s7 | MLP 12 ep, emb 16, seed 7 | 0.95902 ± 0.00047 | 0.95897 | - | 712s | |
+| nn_e12_emb16_h512-256-128_d0.2_orig_s11 | MLP 12 ep, emb 16, seed 11 | 0.95889 ± 0.00063 | 0.95888 | - | 1148s | |
