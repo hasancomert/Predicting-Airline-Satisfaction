@@ -99,3 +99,4 @@ Rows are appended by `src/train.py`; the notes column says what changed. Decisio
 - Aynı liste, MLP 10 koşu ortalaması (0.96022) ile: iç içe 0.96159, değişmedi; `s03_final.csv` korundu.
 - TE girdili MLP (0.95957 / 0.95980) harmanda ağırlık almadı (0.003); hedef kodlamasız XGBoost (0.96084), hedef kodlamasız LightGBM varken 0.009.
 - CatBoost FS1 lr 0.05 (0.96065), CatBoost FS2 lr 0.08 (0.96096) eklenince ≈0.
+| realmlp_pub_e3_ens8 | RealMLP public recipe (raw + categorical twins), 3 epochs, n_ens 8 | 0.96077 ± 0.00054 | 0.96076 | - | 1126s | |
