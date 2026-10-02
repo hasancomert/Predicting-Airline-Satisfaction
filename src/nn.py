@@ -25,6 +25,8 @@ HID = [int(h) for h in opts.get("hidden", "512,256,128").split(",")]
 DROP, USE_ORIG = float(opts.get("drop", 0.2)), int(opts.get("orig", 0))
 SEED, NOTE = int(opts.get("seed", 42)), opts.get("note", "")
 TE = [t for t in opts.get("te", "").split(",") if t]
+K = int(opts.get("k", 5))                       # number of folds
+DEV = torch.device(opts.get("device", "cpu"))   # cuda on a Kaggle GPU
 torch.set_num_threads(int(opts.get("threads", 4)))
 
 if USE_ORIG:
@@ -65,7 +67,7 @@ def fold_num(i, tr, va):
         return num_t
     ktr = np.r_[tr, np.arange(n + m, len(A))] if USE_ORIG else tr
     yk = np.r_[y[tr], yo] if USE_ORIG else y[tr]
-    _, etr, eva, ete = te_block(KEYS, i, ktr, yk, va, n, m, USE_ORIG, 5)
+    _, etr, eva, ete = te_block(KEYS, i, ktr, yk, va, n, m, USE_ORIG, K)
     E = np.zeros((len(A), N_TE), dtype=np.float32)
     E[ktr], E[va], E[n:n + m] = etr, eva, ete
     E = np.log(np.clip(E, 1e-4, 1 - 1e-4) / (1 - np.clip(E, 1e-4, 1 - 1e-4)))
@@ -95,24 +97,27 @@ def predict(model, idx):
     with torch.no_grad():
         for s in range(0, len(idx), 16384):
             b = idx[s:s + 16384]
-            out.append(model(cat_t[b], num_t[b]).numpy())
+            out.append(model(cat_d[b], num_d[b]).cpu().numpy())
     return np.concatenate(out)
 
 
 tag = opts.get("name", f"nn_e{EPOCHS}_emb{EMB}_h{'-'.join(map(str, HID))}_d{DROP}"
                        f"{'_' + '+'.join(TE) if TE else ''}"
-                       f"{'_orig' if USE_ORIG else ''}{f'_s{SEED}' if SEED != 42 else ''}")
+                       f"{'_orig' if USE_ORIG else ''}{f'_s{SEED}' if SEED != 42 else ''}"
+                       f"{f'_k{K}' if K != 5 else ''}")
 print(tag, flush=True)
 t0 = time.time()
 oof, pred, aucs = np.zeros(n), np.zeros(m), []
-test_idx = torch.arange(n, n + m)
-for i, (tr, va) in enumerate(folds(y)):
+test_idx = torch.arange(n, n + m).to(DEV)
+cat_d = cat_t.to(DEV)
+for i, (tr, va) in enumerate(folds(y, K)):
     num_t = fold_num(i, tr, va)
+    num_d = num_t.to(DEV)
     torch.manual_seed(SEED + i)
     rng = np.random.default_rng(SEED + i)
     tr_idx = np.r_[tr, np.arange(n + m, len(A))] if USE_ORIG else tr
-    ytr = torch.from_numpy(np.r_[y[tr], yo] if USE_ORIG else y[tr]).float()
-    model = Net()
+    ytr = torch.from_numpy(np.r_[y[tr], yo] if USE_ORIG else y[tr]).float().to(DEV)
+    model = Net().to(DEV)
     opt = torch.optim.AdamW(model.parameters(), lr=LR, weight_decay=1e-5)
     steps = EPOCHS * int(np.ceil(len(tr_idx) / BS))
     sched = torch.optim.lr_scheduler.OneCycleLR(opt, max_lr=LR, total_steps=steps, pct_start=0.1)
@@ -123,19 +128,19 @@ for i, (tr, va) in enumerate(folds(y)):
         perm = rng.permutation(len(tr_idx))
         for s in range(0, len(perm), BS):
             p = perm[s:s + BS]
-            b = torch.from_numpy(tr_idx[p])
+            b = torch.from_numpy(tr_idx[p]).to(DEV)
             opt.zero_grad()
-            loss = lossf(model(cat_t[b], num_t[b]), ytr[p])
+            loss = lossf(model(cat_d[b], num_d[b]), ytr[torch.from_numpy(p).to(DEV)])
             loss.backward()
             opt.step()
             sched.step()
-        pv = predict(model, torch.from_numpy(va))
+        pv = predict(model, torch.from_numpy(va).to(DEV))
         auc = roc_auc_score(y[va], pv)
         if auc > best:
             best, best_va, best_te = auc, pv, predict(model, test_idx)
         print(f"  fold {i} epoch {ep}: {auc:.5f} ({time.time() - t0:.0f}s)", flush=True)
     oof[va] = best_va
-    pred += 1 / (1 + np.exp(-best_te)) / 5
+    pred += 1 / (1 + np.exp(-best_te)) / K
     aucs.append(best)
     print(f"  fold {i}: {best:.5f}", flush=True)
 oof = 1 / (1 + np.exp(-oof))
