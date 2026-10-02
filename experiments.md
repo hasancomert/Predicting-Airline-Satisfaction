@@ -134,3 +134,4 @@ Rows are appended by `src/train.py`; the notes column says what changed. Decisio
 | nn_e12_emb16_h512-256-128_d0.2_orig_s163_k10 | 10-fold: MLP 12 ep emb 16 seed 163 (Kaggle GPU) | 0.95924 ± 0.00068 | 0.95921 | - | 248s | |
 | realmlp_v4te2_e6_ens8_k10 | 10-fold: RealMLP v4 + te2 TE inputs, e6 (Kaggle GPU) | 0.96147 ± 0.00060 | 0.96143 | - | 3736s | |
 | realmlp_v4_e6_ens8_s3_k10 | 10-fold: RealMLP v4 e6 s3 (Kaggle GPU) | 0.96131 ± 0.00063 | 0.96126 | - | 1711s | |
+| cat_base+te1+tefd+fdprof+cnt+inter+te2_lr0.08_orig_k10 | 10-fold: FS2 CatBoost lr0.08 | 0.96109 ± 0.00069 | 0.96109 | 1511 | 7326s | |
