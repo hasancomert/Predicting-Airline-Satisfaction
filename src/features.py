@@ -188,6 +188,15 @@ def te_keys(spec, train, test, orig=None):
         for c in COLS:
             if c != "Flight Distance":
                 keys[f"te_fd__{clean(c)}"] = fd * (codes[c].max() + 1) + codes[c]
+    if "te3" in spec:  # triples of the strongest columns (by single-key TE AUC of the pairs)
+        top = ["Online boarding", "Class", "Type of Travel", "Inflight wifi service",
+               "Inflight entertainment", "Customer Type", "Leg room service", "Seat comfort"]
+        trip = list(combinations(top, 3)) + [("Flight Distance", "Class", "Type of Travel"),
+                                             ("Flight Distance", "Customer Type", "Type of Travel"),
+                                             ("Flight Distance", "Online boarding", "Class")]
+        for a, b, c in trip:
+            k = (codes[a] * (codes[b].max() + 1) + codes[b]) * (codes[c].max() + 1) + codes[c]
+            keys[f"te3_{clean(a)}__{clean(b)}__{clean(c)}"] = k
     if "tecat" in spec:
         cc = codes["Customer Type"] * 100 + codes["Type of Travel"] * 10 + codes["Class"]
         keys["te_ct_tt_cl"] = cc
