@@ -85,6 +85,10 @@ TUNED = {
     ("xgb", "t1"): dict(max_depth=10, min_child_weight=83.35, subsample=0.9042,
                         colsample_bytree=0.4437, reg_lambda=0.002737, reg_alpha=0.5457,
                         gamma=0.005762, max_bin=1024),
+    # t2: tuned on the no-target-encoding set base,cnt,inter,fdprof (+ original rows)
+    ("lgbm", "t2"): dict(num_leaves=125, max_depth=-1, min_child_samples=90, subsample=0.9523,
+                         colsample_bytree=0.6715, reg_lambda=26.04, reg_alpha=0.007192,
+                         min_split_gain=0.03506, max_bin=511, cat_smooth=5.90),
     ("lgbm", "t1"): dict(num_leaves=112, max_depth=-1, min_child_samples=9, subsample=0.9723,
                          colsample_bytree=0.4592, reg_lambda=18.50, reg_alpha=0.005066,
                          min_split_gain=0.001176, max_bin=511, cat_smooth=1.75),
