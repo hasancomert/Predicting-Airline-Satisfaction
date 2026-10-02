@@ -101,3 +101,4 @@ Rows are appended by `src/train.py`; the notes column says what changed. Decisio
 - CatBoost FS1 lr 0.05 (0.96065), CatBoost FS2 lr 0.08 (0.96096) eklenince ≈0.
 | realmlp_pub_e3_ens8 | RealMLP public recipe (raw + categorical twins), 3 epochs, n_ens 8 | 0.96077 ± 0.00054 | 0.96076 | - | 1126s | |
 | realmlp_v4_e6_ens8 | RealMLP v4: + route profile, counts, original-model logit, in-fold TE (te1, tefd), 6 epochs | 0.96116 ± 0.00054 | 0.96114 | - | 3817s | |
+| realmlp_pub_e6_ens8_s1 | RealMLP public recipe, 6 epochs, seed 1 | 0.96101 ± 0.00054 | 0.96100 | - | 2487s | |
