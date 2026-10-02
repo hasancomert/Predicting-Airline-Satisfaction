@@ -122,3 +122,13 @@ Rows are appended by `src/train.py`; the notes column says what changed. Decisio
 | nn_e12_emb16_h512-256-128_d0.2_orig_s37_k10 | 10-fold: MLP 12 ep emb 16 seed 37 (Kaggle GPU) | 0.95945 ± 0.00054 | 0.95943 | - | 250s | |
 | realmlp_v4_e6_ens8_s2_k10 | 10-fold: RealMLP v4 e6 s2 (Kaggle GPU) | 0.96125 ± 0.00063 | 0.96123 | - | 1645s | |
 | realmlp_pub_e6_ens8_s2_k10 | 10-fold: RealMLP pub e6 s2 (Kaggle GPU) | 0.96112 ± 0.00067 | 0.96112 | - | 1428s | |
+| nn_e12_emb16_h512-256-128_d0.2_orig_s51_k10 | 10-fold: MLP 12 ep emb 16 seed 51 (Kaggle GPU) | 0.95935 ± 0.00066 | 0.95932 | - | 251s | |
+| nn_e12_emb16_h512-256-128_d0.2_orig_s61_k10 | 10-fold: MLP 12 ep emb 16 seed 61 (Kaggle GPU) | 0.95938 ± 0.00065 | 0.95935 | - | 245s | |
+| nn_e12_emb16_h512-256-128_d0.2_orig_s73_k10 | 10-fold: MLP 12 ep emb 16 seed 73 (Kaggle GPU) | 0.95920 ± 0.00066 | 0.95916 | - | 247s | |
+| nn_e12_emb16_h512-256-128_d0.2_orig_s89_k10 | 10-fold: MLP 12 ep emb 16 seed 89 (Kaggle GPU) | 0.95929 ± 0.00063 | 0.95924 | - | 249s | |
+| nn_e12_emb16_h512-256-128_d0.2_orig_s101_k10 | 10-fold: MLP 12 ep emb 16 seed 101 (Kaggle GPU) | 0.95934 ± 0.00079 | 0.95931 | - | 250s | |
+| nn_e12_emb16_h512-256-128_d0.2_orig_s113_k10 | 10-fold: MLP 12 ep emb 16 seed 113 (Kaggle GPU) | 0.95937 ± 0.00072 | 0.95932 | - | 246s | |
+| nn_e12_emb16_h512-256-128_d0.2_orig_s127_k10 | 10-fold: MLP 12 ep emb 16 seed 127 (Kaggle GPU) | 0.95935 ± 0.00075 | 0.95932 | - | 248s | |
+| nn_e12_emb16_h512-256-128_d0.2_orig_s131_k10 | 10-fold: MLP 12 ep emb 16 seed 131 (Kaggle GPU) | 0.95931 ± 0.00063 | 0.95928 | - | 248s | |
+| nn_e12_emb16_h512-256-128_d0.2_orig_s149_k10 | 10-fold: MLP 12 ep emb 16 seed 149 (Kaggle GPU) | 0.95931 ± 0.00065 | 0.95921 | - | 249s | |
+| nn_e12_emb16_h512-256-128_d0.2_orig_s163_k10 | 10-fold: MLP 12 ep emb 16 seed 163 (Kaggle GPU) | 0.95924 ± 0.00068 | 0.95921 | - | 248s | |
