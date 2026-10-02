@@ -73,3 +73,4 @@ Rows are appended by `src/train.py`; the notes column says what changed. Decisio
 | lgbm_base+te1+tefd+fdprof+cnt+inter_lr0.1_t1_orig_ow0.5 | FS1 t1, original rows weight 0.5 | 0.96063 ± 0.00056 | 0.96063 | 150 | 122s | |
 | lgbm_base+te1+tefd+fdprof+cnt+inter_lr0.1_t1_orig_ow2 | FS1 t1, original rows weight 2 | 0.96065 ± 0.00057 | 0.96065 | 141 | 118s | |
 | nn_e12_emb16_h512-256-128_d0.2_te1+tefd_orig | MLP 12 ep + TE inputs (te1, tefd) | 0.95961 ± 0.00054 | 0.95957 | - | 702s | |
+| nn_e12_emb16_h512-256-128_d0.2_te1+tefd+te2_orig | MLP 12 ep + TE inputs (te1, tefd, te2) | 0.95984 ± 0.00056 | 0.95980 | - | 882s | |
