@@ -169,7 +169,7 @@ Gözlemler:
 |---|---|---|---|---|---|
 | 1 | `s01_blend_lr0.1_lgbmFS1-catFS1-lgbmFS2.csv` | lr 0.1 modelleri, hill climbing | 0.96113 | 0.96113 | 0.96059 |
 | 2 | `s02_logitstack_lgbmFS3-xgbFS2-lr0.03_lgbm-xgb-cat-lr0.1_glm_nn.csv` | 7 model, lojistik istifleme | 0.96147 | 0.96146 | 0.96087 |
-| 3 | `s03_final.csv` (hazır, gönderilmedi) | 8 aile, lojistik istifleme | 0.96159 | 0.96160 | |
+| 3 | `s03_final.csv` | 8 aile, lojistik istifleme | 0.96159 | 0.96160 | 0.96106 |
 | 3-alt | `s03alt_rankavg_8families.csv` (hazır, gönderilmedi) | 8 ailenin eşit sıra ortalaması | 0.96153 | 0.96153 | |
 
 Public LB CV'nin yaklaşık 0.0006 altında. 1 → 2 adımında CV +0.00033 iken public +0.00028 arttı. Public kısım

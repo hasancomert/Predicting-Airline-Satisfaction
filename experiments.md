@@ -48,7 +48,7 @@ Rows are appended by `src/train.py`; the notes column says what changed. Decisio
 |---|---|---|---|---|---|
 | 1 | s01_blend_lr0.1_lgbmFS1-catFS1-lgbmFS2.csv | rank hill-climb: LGBM FS1 0.25, CatBoost FS1 0.25, LGBM FS2 0.5 (all lr 0.1) | 0.96113 | 0.96113 | 0.96059 |
 | 2 | s02_logitstack_lgbmFS3-xgbFS2-lr0.03_lgbm-xgb-cat-lr0.1_glm_nn.csv | logistic stacking on logit(p) of 7 models: LGBM FS3 t1 lr0.03 (0.567), XGB FS2 t1 lr0.03 (0.182), CatBoost FS1 lr0.1 (0.161), MLP (0.061), GLM (0.038), LGBM FS2 t1 lr0.1 (0.009), XGB FS1 t1 lr0.1 (-0.027) | 0.96147 | 0.96146 | 0.96087 |
-| 3 (hazır, gönderilmedi) | s03_final.csv | logistic stacking, 8 aile: LGBM FS3 t1 lr0.03 (2 tohum) 0.273, no-TE LGBM (3 koşu) 0.234, XGB FS3 0.183, MLP (7 koşu) 0.140, CatBoost FS2 lr0.08 0.087, XGB FS2 0.076, LGBM FS2 (2 koşu) -0.007, GLM 0.000 | 0.96159 | 0.96160 | |
+| 3 | s03_final.csv | logistic stacking, 8 aile: LGBM FS3 t1 lr0.03 (2 tohum) 0.273, no-TE LGBM (3 koşu) 0.234, XGB FS3 0.183, MLP (7 koşu) 0.140, CatBoost FS2 lr0.08 0.087, XGB FS2 0.076, LGBM FS2 (2 koşu) -0.007, GLM 0.000 | 0.96159 | 0.96160 | 0.96106 |
 | 3-alt (hazır, gönderilmedi) | s03alt_rankavg_8families.csv | aynı 8 ailenin eşit ağırlıklı sıra ortalaması | 0.96153 | 0.96153 | |
 
 ## Model runs (continued)
