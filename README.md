@@ -4,7 +4,21 @@ Hedef `satisfaction` (True/False), gönderim **olasılık**, metrik **ROC AUC**.
 veri inceleme, sabit 5 katlı CV, özellik grupları, LightGBM / XGBoost / CatBoost / MLP / seyrek lojistik
 regresyon, Optuna ile ayar ve OOF üzerinde harman. Tüm deneyler `experiments.md`'de.
 
-<!-- RESULTS -->
+**Sonuç:** 8 model ailesinin lojistik istiflemesi, 5 katlı CV AUC **0.96160** (iç içe). Gönderilen en iyi:
+public **0.96087** (2. gönderim, CV 0.96147). Baseline LightGBM (varsayılanlar) 0.95780'di.
+
+Ne işe yaradı (büyükten küçüğe):
+
+1. Değerlerin kimliğini kat içi hedef kodlamayla vermek (`te1` +0.0012). Özellikle Flight Distance bir rota
+   kimliği gibi davranıyor; mesafe × diğer kolon kodlamaları (+0.0002) ve kolon ikilileri (`te2`, +0.0003).
+2. Orijinal veriyi her eğitim katına ek satır olarak koymak (+0.0002–0.0003).
+3. Ayar ve düşük öğrenme oranı: LightGBM 0.96089 (std, lr 0.1) → 0.96130 (t1, lr 0.03).
+4. Farklı ailelerden harman: tek en iyi model 0.96130 → 0.96160. En değerli üyeler hedef kodlamasız LightGBM
+   ve 7 tohumlu ham girdili MLP.
+
+İşe yaramayanlar: elle türetilmiş gecikme / puan özetleri, puan grupları, 0 bayrakları, orijinal veride değer
+başına oranlar (TE varken), CatBoost'ta her kolonu kategorik vermek, orijinal satır ağırlığını değiştirmek, TE
+girdili MLP'yi harmana katmak, üçlü hedef kodlamalar (gürültü sınırında).
 
 ## Veri
 
@@ -115,11 +129,60 @@ CatBoost lr 0.1 → 0.05: 0.96054 → 0.96065.
 
 ## Ensemble
 
-<!-- ENSEMBLE -->
+`src/blend.py` dört yöntemi aynı aday listesinde karşılaştırır ve iç içe CV'ye göre seçer: tekrar seçilebilir
+hill climbing (sıra uzayında), eşit ağırlıklı sıra ortalaması, eşit ağırlıklı olasılık ortalaması ve logit(p)
+üzerinde lojistik regresyon istifleme. Virgülle verilen etiketler (tohumlar) önce ortalanır.
+
+Son aday listesi (8 aile, s03):
+
+| Üye | Tek başına CV | Lojistik ağırlık |
+|---|---|---|
+| LightGBM FS3 t1 lr 0.03, 2 tohum ortalaması | 0.96130 | 0.273 |
+| LightGBM, hedef kodlamasız (`base,cnt,inter,fdprof`), t1 / t2 / t2 tohum 7 ortalaması | 0.96106 | 0.234 |
+| XGBoost FS3 t1 lr 0.03 | 0.96129 | 0.183 |
+| MLP, 7 koşu ortalaması | 0.96017 | 0.140 |
+| CatBoost FS2 lr 0.08 | 0.96096 | 0.087 |
+| XGBoost FS2 t1 lr 0.03 | 0.96117 | 0.076 |
+| LightGBM FS2 lr 0.03 (t1 tohum 7 + t2) | 0.9612 | −0.007 |
+| Seyrek lojistik regresyon | 0.95802 | 0.000 |
+
+| Yöntem | OOF AUC | İç içe CV |
+|---|---|---|
+| Lojistik istifleme | 0.96159 | **0.96160** |
+| Hill climbing | 0.96161 | 0.96159 |
+| Eşit sıra ortalaması | 0.96153 | 0.96153 |
+| Eşit olasılık ortalaması | 0.96146 | 0.96147 |
+
+Gözlemler:
+
+- Harmana en çok katkıyı **farklı** üyeler yaptı, en güçlü olanlar değil. Hedef kodlamasız LightGBM tek başına
+  FS3'ün 0.00024 altında ama ikinci büyük ağırlığı aldı. Ham girdili MLP (0.9602) de öyle; TE girdili MLP ise
+  tek başına daha iyi olduğu hâlde ağırlık almadı.
+- MLP'de tohum ortalaması güçlü: 1 → 7 koşu 0.95907 → 0.96017. GBDT'lerde ikinci tohum yalnız +0.00001–0.00003.
+- Lojistik istifleme ve hill climbing her seferinde eşit ortalamalardan 0.00006–0.00013 iyi; ikisi kendi
+  aralarında aynı düzeyde.
 
 ## Gönderimler
 
-<!-- SUBMISSIONS -->
+| No | Dosya | İçerik | CV | İç içe CV | Public LB |
+|---|---|---|---|---|---|
+| 1 | `s01_blend_lr0.1_lgbmFS1-catFS1-lgbmFS2.csv` | lr 0.1 modelleri, hill climbing | 0.96113 | 0.96113 | 0.96059 |
+| 2 | `s02_logitstack_lgbmFS3-xgbFS2-lr0.03_lgbm-xgb-cat-lr0.1_glm_nn.csv` | 7 model, lojistik istifleme | 0.96147 | 0.96146 | 0.96087 |
+| 3 | `s03_final.csv` (hazır, gönderilmedi) | 8 aile, lojistik istifleme | 0.96159 | 0.96160 | |
+| 3-alt | `s03alt_rankavg_8families.csv` (hazır, gönderilmedi) | 8 ailenin eşit sıra ortalaması | 0.96153 | 0.96153 | |
+
+Public LB CV'nin yaklaşık 0.0006 altında. 1 → 2 adımında CV +0.00033 iken public +0.00028 arttı. Public kısım
+test'in küçük bir parçası; 140 bin satırlık kat std'si 0.0006 olduğundan, public skorun std'si 0.001'e yakın.
+Bu yüzden kararları CV'ye göre verdim.
+
+**Final için önerilen iki gönderim:**
+
+1. **En iyi CV:** `s03_final.csv`, lojistik istifleme, iç içe CV 0.96160. Ağırlıklar OOF'ta öğrenildi ama
+   yalnız 8 katsayı var ve iç içe ölçüm tam OOF ile aynı çıktı; aşırı uyum işareti yok.
+2. **En sağlam:** `s03alt_rankavg_8families.csv`, aynı 8 farklı model ailesinin (hedef kodlamalı / kodlamasız
+   LightGBM, iki XGBoost, CatBoost, MLP, seyrek lojistik regresyon) **ağırlıksız** sıra ortalaması, CV 0.96153.
+   Öğrenilmiş ağırlık yok; tek bir ailenin özel bir hatasına karşı en dayanıklı seçenek. 1. seçenekle sıra
+   korelasyonu 0.9987.
 
 ## Çalıştırma
 
