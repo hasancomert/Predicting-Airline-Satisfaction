@@ -158,7 +158,8 @@ Gözlemler:
 - Harmana en çok katkıyı **farklı** üyeler yaptı, en güçlü olanlar değil. Hedef kodlamasız LightGBM tek başına
   FS3'ün 0.00024 altında ama ikinci büyük ağırlığı aldı. Ham girdili MLP (0.9602) de öyle; TE girdili MLP ise
   tek başına daha iyi olduğu hâlde ağırlık almadı.
-- MLP'de tohum ortalaması güçlü: 1 → 7 koşu 0.95907 → 0.96017. GBDT'lerde ikinci tohum yalnız +0.00001–0.00003.
+- MLP'de tohum ortalaması güçlü: 1 → 7 koşu 0.95907 → 0.96017 (10 koşu 0.96022, harmanda fark yok). GBDT'lerde
+  ikinci tohum yalnız +0.00001–0.00003.
 - Lojistik istifleme ve hill climbing her seferinde eşit ortalamalardan 0.00006–0.00013 iyi; ikisi kendi
   aralarında aynı düzeyde.
 

@@ -92,3 +92,10 @@ Rows are appended by `src/train.py`; the notes column says what changed. Decisio
 | nn_e12_emb16_h512-256-128_d0.2_orig_s61 | MLP 12 ep, emb 16, seed 61 | 0.95911 ± 0.00065 | 0.95910 | - | 774s | |
 | nn_e12_emb16_h512-256-128_d0.2_orig_s73 | MLP 12 ep, emb 16, seed 73 | 0.95890 ± 0.00059 | 0.95886 | - | 765s | |
 | nn_e12_emb16_h512-256-128_d0.2_orig_s89 | MLP 12 ep, emb 16, seed 89 | 0.95911 ± 0.00072 | 0.95903 | - | 781s | |
+
+## Blend notes
+
+- s03 aday listesi, MLP 7 koşu ortalaması (0.96017) ile: lojistik istifleme iç içe 0.96160 → `s03_final.csv`.
+- Aynı liste, MLP 10 koşu ortalaması (0.96022) ile: iç içe 0.96159, değişmedi; `s03_final.csv` korundu.
+- TE girdili MLP (0.95957 / 0.95980) harmanda ağırlık almadı (0.003); hedef kodlamasız XGBoost (0.96084), hedef kodlamasız LightGBM varken 0.009.
+- CatBoost FS1 lr 0.05 (0.96065), CatBoost FS2 lr 0.08 (0.96096) eklenince ≈0.
