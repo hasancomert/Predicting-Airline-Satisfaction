@@ -108,3 +108,5 @@ Rows are appended by `src/train.py`; the notes column says what changed. Decisio
 | lgbm_base+cnt+inter+fdprof_lr0.03_t1_orig_k10 | 10-fold: no-TE LGBM t1 lr0.03 | 0.96107 ± 0.00064 | 0.96106 | 1097 | 908s | |
 | lgbm_base+cnt+inter+fdprof_lr0.03_t2_orig_k10 | 10-fold: no-TE LGBM t2 lr0.03 | 0.96110 ± 0.00061 | 0.96109 | 769 | 858s | |
 | lgbm_base+te1+tefd+fdprof+cnt+inter+te2+cnt2+opred_lr0.03_t1_orig_k10 | 10-fold: FS3 LGBM t1 lr0.03 | 0.96145 ± 0.00067 | 0.96144 | 483 | 2763s | |
+| xgb_base+te1+tefd+fdprof+cnt+inter+te2+cnt2+opred_lr0.03_t1_orig_k10 | 10-fold: FS3 XGB t1 lr0.03 (Kaggle GPU) | 0.96149 ± 0.00065 | 0.96148 | 512 | 2718s | |
+| xgb_base+te1+tefd+fdprof+cnt+inter+te2+cnt2+opred_lr0.03_t1_orig_s7_k10 | 10-fold: FS3 XGB t1 lr0.03 seed 7 (Kaggle GPU) | 0.96145 ± 0.00067 | 0.96145 | 479 | 2686s | |
