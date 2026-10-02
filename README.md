@@ -134,6 +134,26 @@ eğitim bizim katlarımızda ve bizim özelliklerimizle (`src/realmlp.py`). CPU'
 - MLP'ye hedef kodlamaları girdi olarak vermek tek başına daha iyi (0.9591 → 0.9598) ama harmanda ağırlık
   almadı (0.003): GBDT'lere fazla benziyor. Harmana katkıyı ham girdili MLP veriyor.
 
+## 10 kat (s05)
+
+s04'e kadar her şey 5 katlıydı ve harman 0.9616'da doyuma ulaştı. s05 için seçilen aileler aynı
+`StratifiedKFold(10, shuffle=True, random_state=42)` ile yeniden eğitildi (her model verinin %90'ını görür).
+LightGBM ve CatBoost bu makinede (CPU), XGBoost / RealMLP / MLP özel Kaggle not defterlerinde GPU'da
+(`kaggle/gpu_kernel.py`: `src/` paketlenir, komutlar çalışır, `.npy` çıktıları geri indirilir; hedef kodlama orada
+diske önbelleklenmeden aynı kodla hesaplanır, değerler birebir aynıdır).
+
+| Üye | 5 kat | 10 kat |
+|---|---|---|
+| LightGBM FS3 t1 (2 tohum) | 0.96130 / 0.96130 | 0.96144 / 0.96146 |
+| XGBoost FS3 t1 (2 tohum, GPU) | 0.96129 | 0.96148 / 0.96145 |
+| Hedef kodlamasız LightGBM t1 / t2 | 0.96098 / 0.96095 | 0.96106 / 0.96109 |
+| RealMLP v4 (3 tohum, GPU) | 0.96114 / 0.96107 | 0.96124 / 0.96125 / 0.96123 |
+| RealMLP pub (3 koşu, GPU) | 0.96076 / 0.96100 | 0.96088 / 0.96110 / 0.96112 |
+| MLP, tek tohum (GPU) | 0.9589–0.9591 | 0.9592–0.9594 |
+| MLP, tohum ortalaması | 10 tohum 0.96022 | 15 tohum 0.96043 |
+
+Ortalama kazanç model başına +0.0001–0.0002, önceki yarışmadaki 5 → 10 kat gözlemiyle uyumlu.
+
 ## Ensemble
 
 `src/blend.py` dört yöntemi aynı aday listesinde karşılaştırır ve iç içe CV'ye göre seçer: tekrar seçilebilir
