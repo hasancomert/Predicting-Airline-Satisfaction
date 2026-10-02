@@ -91,3 +91,4 @@ Rows are appended by `src/train.py`; the notes column says what changed. Decisio
 | lgbm_base+te1+tefd+fdprof+cnt+inter+te2_lr0.03_t2_orig | FS2 LGBM with preset t2, lr 0.03 | 0.96118 ± 0.00050 | 0.96118 | 407 | 934s | |
 | nn_e12_emb16_h512-256-128_d0.2_orig_s61 | MLP 12 ep, emb 16, seed 61 | 0.95911 ± 0.00065 | 0.95910 | - | 774s | |
 | nn_e12_emb16_h512-256-128_d0.2_orig_s73 | MLP 12 ep, emb 16, seed 73 | 0.95890 ± 0.00059 | 0.95886 | - | 765s | |
+| nn_e12_emb16_h512-256-128_d0.2_orig_s89 | MLP 12 ep, emb 16, seed 89 | 0.95911 ± 0.00072 | 0.95903 | - | 781s | |
