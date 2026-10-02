@@ -33,7 +33,9 @@ _, _, y = load()
 
 
 def ld(d, t):
-    return np.mean([np.load(d / f"{x}.npy").astype(np.float64) for x in t.split(",")], axis=0)
+    # tags starting with "ext_" are public OOF/test predictions kept in ext/oof and ext/preds
+    path = lambda x: (d.parent / "ext" / d.name if x.startswith("ext_") else d) / f"{x}.npy"
+    return np.mean([np.load(path(x)).astype(np.float64) for x in t.split(",")], axis=0)
 
 
 O = np.column_stack([ld(OOF_DIR, t) for t in tags])
