@@ -108,6 +108,9 @@ Tüm modeller aynı 5 katta, orijinal satırlar eğitim katlarında. Süreler 4 
 | MLP | ham 21 kolon: her biri gömme + sayısal kopyalar | 12 epoch, 3 tohum ortalaması | 0.95992 (tek tohum 0.9590–0.9591) | 12 dk / tohum |
 | MLP + TE girdileri | + te1, tefd, te2 (logit, standart) | 12 epoch | 0.95980 | 15 dk |
 | Seyrek lojistik regresyon | her değer + 190 kolon ikilisi + FD × kategorik, one-hot | C = 0.1 | 0.95802 | 5 dk |
+| RealMLP (pytabkit) | ham kolonlar + her sayısal kolonun kategorik ikizi | açık notebook ayarları, 3 epoch, n_ens 8 | 0.96076 | 19 dk |
+| RealMLP | aynı, 6 epoch, tohum 1 | | 0.96100 | 41 dk |
+| RealMLP v4 | + rota profili, sayımlar, orijinal-model logit'i, kat içi TE (te1, tefd) | 6 epoch | 0.96114 | 64 dk |
 
 **Ayar (Optuna, `src/tune.py`).** FS1 üzerinde, 5 katın ilk 2'sinde, lr 0.1 ile; LightGBM 30, XGBoost 18 deneme.
 
@@ -118,6 +121,10 @@ Tüm modeller aynı 5 katta, orijinal satırlar eğitim katlarında. Süreler 4 
 
 Öğrenme oranı 0.1 → 0.03: LightGBM FS3 0.96089 (std) → 0.96130 (t1); XGBoost FS2 0.96053 (FS1, lr 0.1) → 0.96117.
 CatBoost lr 0.1 → 0.05: 0.96054 → 0.96065.
+
+RealMLP ayarları ve "her sayısal kolona kategorik ikiz" fikri yekenot'un açık *PS|S6|E10: RealMLP · PyTabKit*
+notebook'undan, v4 özellik görünümü goodpjw2008'in *Route-ID FE + OG-Model Stack* notebook'undan esinlenildi;
+eğitim bizim katlarımızda ve bizim özelliklerimizle (`src/realmlp.py`). CPU'da bir kat 4–13 dakika.
 
 İşe yaramayanlar (model düzeyi):
 
