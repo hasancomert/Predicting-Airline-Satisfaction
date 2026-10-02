@@ -69,3 +69,7 @@ Rows are appended by `src/train.py`; the notes column says what changed. Decisio
 | lgbm_base+te1+tefd+fdprof+cnt+inter+te2+te3_lr0.1_t1_orig | FS2 + te3 (56+3 triples of the strongest columns), LGBM t1 | 0.96106 ± 0.00058 | 0.96105 | 107 | 413s | |
 | nn_e12_emb16_h512-256-128_d0.2_orig | MLP, 12 epochs, emb 16 | 0.95910 ± 0.00058 | 0.95907 | - | 713s | |
 | lgbm_base+te1+tefd+fdprof+cnt+inter+te2+cnt2+opred_lr0.03_t1_orig_s7 | FS3, LGBM t1, lr 0.03, seed 7 | 0.96131 ± 0.00051 | 0.96130 | 424 | 1241s | |
+| lgbm_base+te1+tefd+fdprof+cnt+inter_lr0.1_t1_orig | FS1, tuned LGBM preset t1 | 0.96074 ± 0.00065 | 0.96074 | 137 | 120s | |
+| lgbm_base+te1+tefd+fdprof+cnt+inter_lr0.1_t1_orig_ow0.5 | FS1 t1, original rows weight 0.5 | 0.96063 ± 0.00056 | 0.96063 | 150 | 122s | |
+| lgbm_base+te1+tefd+fdprof+cnt+inter_lr0.1_t1_orig_ow2 | FS1 t1, original rows weight 2 | 0.96065 ± 0.00057 | 0.96065 | 141 | 118s | |
+| nn_e12_emb16_h512-256-128_d0.2_te1+tefd_orig | MLP 12 ep + TE inputs (te1, tefd) | 0.95961 ± 0.00054 | 0.95957 | - | 702s | |
