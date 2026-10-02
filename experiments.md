@@ -85,3 +85,4 @@ Rows are appended by `src/train.py`; the notes column says what changed. Decisio
 | glm_pairsall_fd1_C0.03 | Sparse LR, C 0.03 | 0.95805 ± 0.00066 | 0.95805 | - | 202s | |
 | xgb_base+cnt+inter+fdprof_lr0.03_t1_orig | no-TE XGB, t1, lr 0.03 | 0.96084 ± 0.00055 | 0.96084 | 1081 | 1370s | |
 | lgbm_base+cnt+inter+fdprof_lr0.03_t2_orig | no-TE LGBM, preset t2 (tuned on this set), lr 0.03 | 0.96095 ± 0.00051 | 0.96095 | 727 | 418s | |
+| lgbm_base+cnt+inter+fdprof_lr0.03_t2_orig_s7 | no-TE LGBM, t2, lr 0.03, seed 7 | 0.96096 ± 0.00050 | 0.96095 | 815 | 473s | |
