@@ -8,6 +8,7 @@ Usage: python src/realmlp.py [feats=pub|v4] [epochs=3] [n_ens=8] [seed=42] [te=t
   pub  raw columns + categorical twins
   v4   pub + label-free route profile (fdprof) + value counts (cnt) + original-model logit (opred)
        + in-fold target encodings (te=...; same cache as train.py, original rows not used)
+  v5   v4 + logit of a RealMLP trained on the original data only (orm)
 Per-fold checkpoints in cache/partial, so a restarted run resumes.
 """
 import sys
@@ -48,7 +49,7 @@ REALMLP = dict(
 )
 from pytabkit import RealMLP_TD_Classifier  # noqa: E402  (slow import)
 
-need_orig = FEATS == "v4"
+need_orig = FEATS in ("v4", "v5")
 if need_orig:
     train, test, y, orig, yo = load(orig=True)
 else:
@@ -56,22 +57,56 @@ else:
     orig = None
 n, m = len(train), len(test)
 full = pd.concat([train[COLS], test[COLS]], ignore_index=True)
-X = full.copy()
-X["Arrival Delay in Minutes"] = X["Arrival Delay in Minutes"].fillna(0.0)
-cat_cols = list(CATS)
-for c in NUMS:
-    X[c + "_cat_"] = X[c].astype(int).astype(str)
-    cat_cols.append(c + "_cat_")
-for c in cat_cols:
-    X[c] = X[c].astype(str).astype("category")
-if FEATS == "v4":
-    F = build(["base", "fdprof", "cnt", "opred"], train, test, orig).iloc[:n + m]
-    extra = [c for c in F.columns if c.startswith(("fdp_", "opred")) or c.endswith("_cnt")]
+
+
+def twin_frame(D):
+    """Raw columns + a categorical twin of every numeric column (one embedding per value)."""
+    X = D.copy()
+    X["Arrival Delay in Minutes"] = X["Arrival Delay in Minutes"].fillna(0.0)
+    cats = list(CATS)
+    for c in NUMS:
+        X[c + "_cat_"] = X[c].astype(int).astype(str)
+        cats.append(c + "_cat_")
+    for c in cats:
+        X[c] = X[c].astype(str).astype("category")
+    return X, cats
+
+
+def logit(v):
+    v = np.clip(np.asarray(v, dtype=np.float64), 1e-6, 1 - 1e-6)
+    return np.log(v / (1 - v)).astype(np.float32)
+
+
+def orig_realmlp():
+    """RealMLP trained on the original rows only (3 seeds, 8 epochs), scored on train+test.
+    No competition label is used, so it is leak-free for every fold. Cached per device."""
+    path = ROOT / "cache" / f"orm_{DEVICE}.npy"
+    if path.exists():
+        return np.load(path)
+    XA, cats = twin_frame(pd.concat([full, orig[COLS]], ignore_index=True))
+    XA.columns = [c.replace("/", "_") for c in XA.columns]
+    cats = [c.replace("/", "_") for c in cats]
+    p = np.zeros(n + m)
+    for s in range(3):
+        mdl = RealMLP_TD_Classifier(**{**REALMLP, "n_epochs": 8}, device=DEVICE, random_state=s,
+                                    verbosity=0, val_fraction=0.05)
+        mdl.fit(XA.iloc[n + m:], yo, cat_col_names=cats)
+        p += mdl.predict_proba(XA.iloc[:n + m])[:, 1] / 3
+    path.parent.mkdir(exist_ok=True)
+    np.save(path, p)
+    return p
+
+
+X, cat_cols = twin_frame(full)
+if FEATS in ("v4", "v5"):
+    groups = ["base", "fdprof", "cnt", "opred"]
+    F = build(groups, train, test, orig).iloc[:n + m]
+    extra = [c for c in F.columns
+             if c.startswith(("fdp_", "opred")) or c.endswith("_cnt") or c.startswith("cnt_")]
     for c in extra:
-        v = F[c].to_numpy(np.float64)
-        if c == "opred":
-            v = np.log(np.clip(v, 1e-6, 1 - 1e-6) / (1 - np.clip(v, 1e-6, 1 - 1e-6)))
-        X[c] = v.astype(np.float32)
+        X[c] = logit(F[c]) if c == "opred" else F[c].to_numpy(np.float32)
+if FEATS == "v5":
+    X["orm"] = logit(orig_realmlp())
 X.columns = [c.replace("/", "_") for c in X.columns]
 cat_cols = [c.replace("/", "_") for c in cat_cols]
 KEYS = te_keys(TE, train, test) if TE else None
@@ -101,8 +136,8 @@ for i, (tr, va) in enumerate(folds(y, K)):
             X.iloc[n:].reset_index(drop=True)
         if KEYS is not None:
             cols, etr, eva, ete = te_block(KEYS, i, tr, y[tr], va, n, m, 0, K)
-            for j, c in enumerate(cols):
-                Xa[c], Xb[c], Xt[c] = etr[:, j], eva[:, j], ete[:, j]
+            add = lambda d, e: pd.concat([d, pd.DataFrame(e, columns=cols)], axis=1)
+            Xa, Xb, Xt = add(Xa, etr), add(Xb, eva), add(Xt, ete)
         mdl = RealMLP_TD_Classifier(**REALMLP, device=DEVICE, random_state=SEED + i,
                                     val_metric_name="1-auc_ovr", verbosity=0)
         mdl.fit(Xa, y[tr], X_val=Xb, y_val=y[va], cat_col_names=cat_cols)
