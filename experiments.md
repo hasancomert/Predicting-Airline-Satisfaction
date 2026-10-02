@@ -51,6 +51,7 @@ Rows are appended by `src/train.py`; the notes column says what changed. Decisio
 | 3 | s03_final.csv | logistic stacking, 8 aile: LGBM FS3 t1 lr0.03 (2 tohum) 0.273, no-TE LGBM (3 koşu) 0.234, XGB FS3 0.183, MLP (7 koşu) 0.140, CatBoost FS2 lr0.08 0.087, XGB FS2 0.076, LGBM FS2 (2 koşu) -0.007, GLM 0.000 | 0.96159 | 0.96160 | 0.96106 |
 | 3-alt | s03alt_rankavg_8families.csv | aynı 8 ailenin eşit ağırlıklı sıra ortalaması (kullanıcı gönderdi) | 0.96153 | 0.96153 | 0.96092 |
 | 4 | s04_hill_6fam_realmlp.csv | sıra uzayında hill climbing; 10 aileden 6'sı seçildi, her biri 1/6: LGBM FS3 (2 tohum), XGB FS3, CatBoost FS2, hedef kodlamasız LGBM (3 koşu), RealMLP pub (3 ve 6 epoch), RealMLP v4 (2 tohum). Lojistik istifleme aynı listede iç içe 0.96164 | 0.96165 | 0.96165 | 0.96107 |
+| 5a (hazır, gönderilmedi) | s05a_hill_own5fold_plus_public.csv | s04 listesi + goodpjw2008 açık OOF grupları (aynı 5 kat, hizalama doğrulandı); hill climbing 7 üye seçti, her biri 1/7: LGBM FS3, XGB FS3, CatBoost FS2, hedef kodlamasız LGBM, RealMLP pub (bizim), açık XGB grubu, açık RealMLP v4 grubu. Lojistik istifleme 0.96169 ama ±0.59 ağırlıklı (iki aynı tarifli RealMLP arasında fark alıyor), sağlam değil | 0.96168 | 0.96167 | |
 
 ## Model runs (continued)
 
