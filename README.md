@@ -158,6 +158,20 @@ Ortalama kazanç model başına +0.0001–0.0002, önceki yarışmadaki 5 → 10
 0.96143 / 0.96144 / 0.96145; ortalaması 0.96153) en güçlü sinir ağı oldu. 10 katlı 8 aile harmanı: hill climbing
 iç içe 0.96181, eşit sıra ortalaması 0.96180, lojistik istifleme 0.96180 (s04: 0.96165).
 
+s06 / s07 turunda 10 katta denenenler:
+
+| Üye | 10 kat CV | Harmana etkisi |
+|---|---|---|
+| LightGBM FS2 + `te3` (üçlü kodlamalar) + opred, 2 tohum | 0.96146 / 0.96142 | ≈0 |
+| XGBoost FS3 + `te3` | 0.96144 | ≈0 |
+| XGBoost FS3 3. tohum, CatBoost FS2 2. tohum | 0.96142 / 0.96105 | ≈0 |
+| RealMLP v5 (v4+te2 + orijinal veride eğitilmiş RealMLP'nin logit'i), 2 tohum | 0.96145 / 0.96143 | ≈0 |
+| **TabM** (pytabkit `TabM_D`, v4+te2 özellikleri, ikizsiz) | **0.96137** | +0.00003, en büyük ağırlık (0.185) |
+
+Denenip tutulmayanlar: harman ağırlıklarını segment (Class, Type of Travel) başına ayrı öğrenmek (0.96184 →
+0.96184); LightGBM'i `rank_xendcg` sıralama hedefiyle, rastgele 100 / 1000 satırlık gruplarda eğitmek (ilk iki katta
+0.9601 / 0.9591, ikili hedef 0.9613); bütün kolonları LightGBM'e kategorik olarak da vermek (0.95995).
+
 ## Ensemble
 
 `src/blend.py` dört yöntemi aynı aday listesinde karşılaştırır ve iç içe CV'ye göre seçer: tekrar seçilebilir
