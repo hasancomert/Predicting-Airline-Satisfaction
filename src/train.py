@@ -45,6 +45,9 @@ NOTE = opts.pop("note", "")
 LOG = int(opts.pop("log", 1))
 NAME = opts.pop("name", None)
 THREADS = int(opts.pop("threads", 4))
+RANKG = int(opts.pop("rankgroup", 0))  # >0: LightGBM rank_xendcg on random query groups of this size
+_only = opts.pop("only", ())  # quick test on some folds, e.g. only=0,1 (parsed as a tuple)
+ONLY = [int(f) for f in (_only if isinstance(_only, (tuple, list)) else (_only,)) if f != ""]
 DEVICE = opts.pop("device", None)  # e.g. cuda for XGBoost on a Kaggle GPU; not part of the tag
 SKIP = int(opts.pop("skip", 1))  # skip the run when its OOF file already exists (restart-safe)
 
@@ -106,6 +109,17 @@ def lgbm(Xtr, ytr, Xva, yva, Xte):
              max_bin=255, cat_smooth=10)
     p.update(TUNED.get(("lgbm", PRESET), {}))
     p.update(opts)
+    if RANKG:  # pairwise-style ranking objective (closer to AUC) on random groups
+        perm = np.random.default_rng(MSEED).permutation(len(ytr))
+        Xp, yp = Xtr.iloc[perm], ytr[perm]
+        sizes = [RANKG] * (len(yp) // RANKG) + ([len(yp) % RANKG] if len(yp) % RANKG else [])
+        mdl = lgb.LGBMRanker(objective="rank_xendcg", metric="auc", random_state=MSEED,
+                             verbose=-1, n_jobs=THREADS, **p)
+        vg = [10000] * (len(yva) // 10000) + ([len(yva) % 10000] if len(yva) % 10000 else [])
+        mdl.fit(Xp, yp, group=sizes, eval_set=[(Xva, yva)], eval_group=[vg],
+                callbacks=[lgb.early_stopping(max(50, int(20 / LR)), verbose=False)])
+        sig = lambda z: 1 / (1 + np.exp(-z / max(1e-9, np.std(z))))
+        return sig(mdl.predict(Xva)), sig(mdl.predict(Xte)), mdl.best_iteration_
     mdl = lgb.LGBMClassifier(random_state=MSEED, verbose=-1, n_jobs=THREADS, **p)
     mdl.fit(Xtr, ytr, sample_weight=W, eval_set=[(Xva, yva)], eval_metric="auc",
             callbacks=[lgb.early_stopping(max(50, int(20 / LR)), verbose=False)])
@@ -146,7 +160,8 @@ tag = NAME or "_".join(x for x in [model_name, "+".join(groups), f"lr{LR}", PRES
                                    "orig" if USE_ORIG else "", f"ow{OW:g}" if OW != 1 else "",
                                    extra,
                                    f"s{MSEED}" if MSEED != SEED else "",
-                                   f"k{K}" if K != FOLDS else ""] if x)
+                                   f"k{K}" if K != FOLDS else "",
+                                   f"rank{RANKG}" if RANKG else ""] if x)
 if SKIP and (ROOT / "oof" / f"{tag}.npy").exists():
     print(f"{tag}: already done, skipping (skip=0 to rerun)")
     sys.exit(0)
@@ -158,6 +173,8 @@ PART = ROOT / "cache" / "partial"
 PART.mkdir(parents=True, exist_ok=True)
 ncols = 0
 for i, (tr, va) in enumerate(fold_idx):
+    if ONLY and i not in ONLY:
+        continue
     ck = PART / f"{tag}__f{i}.npz"  # per-fold checkpoint: a restarted run resumes here
     if ck.exists():
         d = np.load(ck)
@@ -173,6 +190,9 @@ for i, (tr, va) in enumerate(fold_idx):
     aucs.append(roc_auc_score(y[va], oof[va]))
     its.append(it)
     print(f"  fold {i}: {aucs[-1]:.5f} ({it} it, {time.time() - t0:.0f}s)", flush=True)
+if ONLY:
+    print(f"{tag}: folds {ONLY} mean {np.mean(aucs):.5f} (partial run, nothing saved)")
+    sys.exit(0)
 cv = roc_auc_score(y, oof)
 mean, std = np.mean(aucs), np.std(aucs)
 print(f"{tag} OOF AUC {cv:.5f} | fold mean {mean:.5f} ± {std:.5f} | "
