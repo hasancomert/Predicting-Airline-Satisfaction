@@ -148,3 +148,4 @@ Rows are appended by `src/train.py`; the notes column says what changed. Decisio
 | xgb_base+te1+tefd+fdprof+cnt+inter+te2+cnt2+opred+te3_lr0.03_t1_orig_k10 | 10-fold: FS3 + te3 XGB t1 lr0.03 (Kaggle GPU) | 0.96145 ± 0.00071 | 0.96144 | 423 | 3004s | |
 | xgb_base+te1+tefd+fdprof+cnt+inter+te2+cnt2+opred_lr0.03_t1_orig_s3_k10 | 10-fold: FS3 XGB t1 lr0.03 seed 3 (Kaggle GPU) | 0.96143 ± 0.00067 | 0.96142 | 502 | 2598s | |
 | tabm_v4te2_k10 | 10-fold: TabM (pytabkit TabM_D) on v4 + te2 features, no twins (Kaggle GPU) | 0.96139 ± 0.00062 | 0.96137 | - | 11371s | |
+| tabm_v4te2_bs2048_s1_k10 | 10-fold: TabM v4+te2, batch 2048, seed 1 (Kaggle GPU) | 0.96139 ± 0.00061 | 0.96137 | - | 9872s | |
