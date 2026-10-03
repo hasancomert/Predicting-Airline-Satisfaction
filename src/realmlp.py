@@ -9,6 +9,8 @@ Usage: python src/realmlp.py [feats=pub|v4] [epochs=3] [n_ens=8] [seed=42] [te=t
   v4   pub + label-free route profile (fdprof) + value counts (cnt) + original-model logit (opred)
        + in-fold target encodings (te=...; same cache as train.py, original rows not used)
   v5   v4 + logit of a RealMLP trained on the original data only (orm)
+  model=tabm  TabM (pytabkit TabM_D) instead of RealMLP; epochs = max epochs, patience=, bs=,
+              twins=0 drops the categorical twins (TE columns already carry value identity)
 Per-fold checkpoints in cache/partial, so a restarted run resumes.
 """
 import sys
@@ -47,7 +49,11 @@ REALMLP = dict(
     bias_init_mode="neg-uniform-dynamic-2",
     tfms=["one_hot", "median_center", "robust_scale", "smooth_clip", "embedding", "l2_normalize"],
 )
-from pytabkit import RealMLP_TD_Classifier  # noqa: E402  (slow import)
+from pytabkit import RealMLP_TD_Classifier, TabM_D_Classifier  # noqa: E402  (slow import)
+MODEL = opts.get("model", "realmlp")       # realmlp | tabm
+TWINS = int(opts.get("twins", 1))          # categorical twins of the numeric columns
+BS = int(opts.get("bs", 1024))             # TabM batch size
+PATIENCE = int(opts.get("patience", 4))    # TabM early-stopping patience (epochs)
 
 need_orig = FEATS in ("v4", "v5")
 if need_orig:
@@ -98,6 +104,9 @@ def orig_realmlp():
 
 
 X, cat_cols = twin_frame(full)
+if not TWINS:
+    X = X.drop(columns=[c for c in cat_cols if c.endswith("_cat_")])
+    cat_cols = [c for c in cat_cols if not c.endswith("_cat_")]
 if FEATS in ("v4", "v5"):
     groups = ["base", "fdprof", "cnt", "opred"]
     F = build(groups, train, test, orig).iloc[:n + m]
@@ -111,7 +120,7 @@ X.columns = [c.replace("/", "_") for c in X.columns]
 cat_cols = [c.replace("/", "_") for c in cat_cols]
 KEYS = te_keys(TE, train, test) if TE else None
 
-tag = opts.get("name", f"realmlp_{FEATS}_e{EPOCHS}_ens{N_ENS}"
+tag = opts.get("name", f"{MODEL}_{FEATS}_e{EPOCHS}_ens{N_ENS}"
                        f"{'_' + '+'.join(TE) if TE and FEATS != 'v4' else ''}"
                        f"{f'_s{SEED}' if SEED != 42 else ''}{f'_k{K}' if K != 5 else ''}")
 if (ROOT / "oof" / f"{tag}.npy").exists():
@@ -138,8 +147,13 @@ for i, (tr, va) in enumerate(folds(y, K)):
             cols, etr, eva, ete = te_block(KEYS, i, tr, y[tr], va, n, m, 0, K)
             add = lambda d, e: pd.concat([d, pd.DataFrame(e, columns=cols)], axis=1)
             Xa, Xb, Xt = add(Xa, etr), add(Xb, eva), add(Xt, ete)
-        mdl = RealMLP_TD_Classifier(**REALMLP, device=DEVICE, random_state=SEED + i,
-                                    val_metric_name="1-auc_ovr", verbosity=0)
+        if MODEL == "tabm":
+            mdl = TabM_D_Classifier(device=DEVICE, random_state=SEED + i, verbosity=0,
+                                    n_epochs=EPOCHS, patience=PATIENCE, batch_size=BS,
+                                    val_metric_name="1-auc_ovr")
+        else:
+            mdl = RealMLP_TD_Classifier(**REALMLP, device=DEVICE, random_state=SEED + i,
+                                        val_metric_name="1-auc_ovr", verbosity=0)
         mdl.fit(Xa, y[tr], X_val=Xb, y_val=y[va], cat_col_names=cat_cols)
         oof[va] = mdl.predict_proba(Xb)[:, 1]
         p = mdl.predict_proba(Xt)[:, 1]
