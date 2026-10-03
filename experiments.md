@@ -140,3 +140,4 @@ Rows are appended by `src/train.py`; the notes column says what changed. Decisio
 | lgbm_base+te1+tefd+fdprof+cnt+inter+te2+cnt2+opred_lr0.03_t1_orig_s3_k10 | 10-fold: FS3 LGBM t1 lr0.03 seed 3 | 0.96146 ± 0.00066 | 0.96145 | 473 | 2695s | |
 | realmlp_v4te2_e6_ens8_s2_k10 | 10-fold: RealMLP v4 + te2, e6, seed 2 (Kaggle GPU) | 0.96148 ± 0.00061 | 0.96145 | - | 3625s | |
 | realmlp_v5_e6_ens8_te1+tefd+te2_s1_k10 | 10-fold: RealMLP v5, e6, seed 1 (Kaggle GPU) | 0.96147 ± 0.00060 | 0.96143 | - | 3579s | |
+| realmlp_v5_e6_ens8_te1+tefd+te2_k10 | 10-fold: RealMLP v5 (v4+te2 + original-data RealMLP logit), e6 (Kaggle GPU) | 0.96149 ± 0.00060 | 0.96145 | - | 3692s | |
