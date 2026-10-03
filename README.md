@@ -166,7 +166,7 @@ s06 / s07 turunda 10 katta denenenler:
 | XGBoost FS3 + `te3` | 0.96144 | ≈0 |
 | XGBoost FS3 3. tohum, CatBoost FS2 2. tohum | 0.96142 / 0.96105 | ≈0 |
 | RealMLP v5 (v4+te2 + orijinal veride eğitilmiş RealMLP'nin logit'i), 2 tohum | 0.96145 / 0.96143 | ≈0 |
-| **TabM** (pytabkit `TabM_D`, v4+te2 özellikleri, ikizsiz) | **0.96137** | +0.00003, en büyük ağırlık (0.185) |
+| **TabM** (pytabkit `TabM_D`, v4+te2 özellikleri, ikizsiz), 3 tohum | **0.96137 / 0.96137 / 0.96133** (ortalama 0.96142) | +0.00003, en büyük ağırlık |
 
 Denenip tutulmayanlar: harman ağırlıklarını segment (Class, Type of Travel) başına ayrı öğrenmek (0.96184 →
 0.96184); LightGBM'i `rank_xendcg` sıralama hedefiyle, rastgele 100 / 1000 satırlık gruplarda eğitmek (ilk iki katta
@@ -219,6 +219,7 @@ Gözlemler:
 | 4 | `s04_hill_6fam_realmlp.csv` | RealMLP eklendi; hill climbing 6 aileyi eşit ağırlıkla seçti | 0.96165 | 0.96165 | 0.96107 |
 | 5 | `s05_k10_hill_8fam.csv` | 10 kat, 8 aile (RealMLP v4+te2 dahil), hill climbing | 0.96182 | 0.96181 | 0.96114 |
 | 6 | `s06_k10_logit_9fam.csv` | 10 kat, 9 aile (+te3 GBDT'ler, CatBoost 2. tohum, RealMLP v5), lojistik istifleme | 0.96181 | 0.96181 | 0.96116 |
+| 7 | `s07_k10_10fam_tabm.csv` | s06 + TabM (3 tohum), lojistik istifleme | 0.96184 | 0.96184 | 0.96119 |
 
 Public LB CV'nin yaklaşık 0.0006 altında. 1 → 2 adımında CV +0.00033 iken public +0.00028 arttı. Public kısım
 test'in küçük bir parçası; 140 bin satırlık kat std'si 0.0006 olduğundan, public skorun std'si 0.001'e yakın.
