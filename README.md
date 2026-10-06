@@ -207,6 +207,29 @@ Kaynakları tek tek çıkarınca (C=0.001) en büyük kayıp bizim ailelerimizde
 hedef kodlamasız LightGBM, CatBoost, TabM, RealMLP) açık havuza yeni bilgi katıyor. Farklı kat düzenlerini
 karıştırmak doğrusal istiflemede sorun değil: her üyenin her satır tahmini o satırı görmemiş bir modelden.
 
+## s09: kendi TabPFN'imiz, orijinal satırlı sinir ağları, yenilenen açık havuz
+
+| Yeni üye (10 kat, aksi belirtilmedikçe) | Tek başına CV | İstife etkisi (iç içe) |
+|---|---|---|
+| RealMLP pub + orijinal satırlar (2 tohum) | 0.96127 / 0.96128 (orijinalsiz 0.96110) | +0.000002, en büyük 2. ağırlık |
+| Hedef kodlamasız XGBoost t1 | 0.96102 | +0.000008 |
+| RealMLP v4+te2 + orijinal satırlar | **0.96149** (orijinalsiz 0.96143) | ≈0 |
+| TabPFN-3.5, tam kat bağlamı, kendi 22 sütunluk görünümümüz (5 kat, Kaggle 2×T4, 4.4 saat) | 0.96120 | ≈0 (açık `gp_tabpfn_te4` ile korelasyon 0.998) |
+| TabM, ham sütunlar + kategorik ikizler | 0.96001 | +0.000004 |
+| Hedef kodlamasız CatBoost / LightGBM extra_trees | 0.96068 / 0.95625 | 0 (listeye alınmadı) |
+
+Açık havuz yenilemesi: sadamtorres (38) ve amanatar (7, fold içi TE) eklendi → 169 üye; goodpjw2008'in "TabPFN
+member" veri seti P8'dekilerle, busyaprime'ın yeni sürümü eskisiyle aynı çıktı. Denenip bırakılanlar: istif
+girdisi olarak probit(sıra) (0.9613, logit 0.96213), LightGBM meta-öğrenici (0.96200 < 0.96214).
+
+| İstif | İç içe CV | Public LB |
+|---|---|---|
+| s08: kendi 10 aile + 124 açık | 0.962127 | 0.96165 |
+| **s09: kendi 15 üye + 169 açık (C=0.001)** | **0.962149** | **0.96171** (24./948) |
+
+Kaynak ablasyonu (s09): kendi üyelerimiz çıkınca −0.000087, goodpjw2008 −0.000031, busyaprime −0.000025, diğer
+her kaynak ≤ 0.000006. İstif doymuş durumda: her yeni üye en fazla +0.00001 getiriyor.
+
 ## Ensemble
 
 `src/blend.py` dört yöntemi aynı aday listesinde karşılaştırır ve iç içe CV'ye göre seçer: tekrar seçilebilir
@@ -256,19 +279,15 @@ Gözlemler:
 | 6 | `s06_k10_logit_9fam.csv` | 10 kat, 9 aile (+te3 GBDT'ler, CatBoost 2. tohum, RealMLP v5), lojistik istifleme | 0.96181 | 0.96181 | 0.96116 |
 | 7 | `s07_k10_10fam_tabm.csv` | s06 + TabM (3 tohum), lojistik istifleme | 0.96184 | 0.96184 | 0.96119 |
 | 8 | `s08_stack_own10fam_pub124_C0.001.csv` | kendi 10 ailemiz + 124 açık OOF üyesi, lojistik istifleme (C=0.001) | 0.96213 | 0.96213 | 0.96165 |
+| 9 | `s09_stack_own15_pub169_C0.001.csv` | kendi 15 üyemiz (+orijinal satırlı RealMLP, kendi TabPFN-3.5, hedef kodlamasız XGB, ham TabM) + 169 açık üye, lojistik istifleme (C=0.001) | 0.96215 | 0.96215 | **0.96171** |
 
 Public LB CV'nin yaklaşık 0.0006 altında. 1 → 2 adımında CV +0.00033 iken public +0.00028 arttı. Public kısım
 test'in küçük bir parçası; 140 bin satırlık kat std'si 0.0006 olduğundan, public skorun std'si 0.001'e yakın.
 Bu yüzden kararları CV'ye göre verdim.
 
-**Final için önerilen iki gönderim:**
-
-1. **En iyi CV:** `s03_final.csv`, lojistik istifleme, iç içe CV 0.96160. Ağırlıklar OOF'ta öğrenildi ama
-   yalnız 8 katsayı var ve iç içe ölçüm tam OOF ile aynı çıktı; aşırı uyum işareti yok.
-2. **En sağlam:** `s03alt_rankavg_8families.csv`, aynı 8 farklı model ailesinin (hedef kodlamalı / kodlamasız
-   LightGBM, iki XGBoost, CatBoost, MLP, seyrek lojistik regresyon) **ağırlıksız** sıra ortalaması, CV 0.96153.
-   Öğrenilmiş ağırlık yok; tek bir ailenin özel bir hatasına karşı en dayanıklı seçenek. 1. seçenekle sıra
-   korelasyonu 0.9987.
+**Final seçimi:** kapanıştan önce kullanıcıyla birlikte verilecek. Şu anki adaylar: en iyi CV için s09
+(iç içe 0.96215, public 0.96171); sağlam seçenek olarak yalnız kendi 10 katlı üyelerimizden kurulan s07
+(iç içe 0.96184, public 0.96119), açık üyelerin üretim sürecine bağımlı değil.
 
 ## Çalıştırma
 
