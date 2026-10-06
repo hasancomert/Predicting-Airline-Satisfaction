@@ -132,6 +132,12 @@ for f in sorted(glob.glob(str(d("ds__s6e10-busyaprime-five-members-oof") / "bp_*
     z = np.load(f, allow_pickle=False)
     add(os.path.basename(f)[:-4], z["oof"], z["test"], "busyaprime")
 
+# sadamtorres artifacts (5 folds, seed 42): GBDT variants, kNN features, sparse LR, MLP, RealMLP seeds
+for f in sorted(glob.glob(str(d("ds__ps-s6e10-airline-satisfaction-artifacts") / "preds_*.npz"))):
+    z = np.load(f, allow_pickle=False)
+    if "oof" in z.files and "test" in z.files:
+        add("sd_" + os.path.basename(f)[6:-4], z["oof"], z["test"], "sadamtorres")
+
 k = pd.DataFrame(kept, columns=["name", "source", "oof_auc"])
 print(k.groupby("source").oof_auc.agg(["size", "max"]).sort_values("max", ascending=False).round(5))
 print(f"kept {len(kept)} members; rejected {len(rejected)}: {rejected}")
