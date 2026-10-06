@@ -172,6 +172,41 @@ Denenip tutulmayanlar: harman ağırlıklarını segment (Class, Type of Travel)
 0.96184); LightGBM'i `rank_xendcg` sıralama hedefiyle, rastgele 100 / 1000 satırlık gruplarda eğitmek (ilk iki katta
 0.9601 / 0.9591, ikili hedef 0.9613); bütün kolonları LightGBM'e kategorik olarak da vermek (0.95995).
 
+## Açık OOF kütüphaneleri (s08)
+
+Yarışmanın ilk haftasında pek çok katılımcı aynı train satırları üzerinde OOF ve test tahminlerini paylaştı (çoğu
+`StratifiedKFold(5, shuffle=True, random_state=42)`). Kurallar herkese açık dış veriye izin veriyor. `src/ext_pub.py`
+bunları `ext/pub/` altından okuyup id'ye göre hizalar, şekil / sonluluk denetler ve OOF AUC'si makul aralık dışında
+olanı (sızdırmış olabilecek, > 0.9625) reddeder. 124 üye kabul edildi, hiçbiri reddedilmedi.
+
+| Kaynak | Üye | En iyi tek OOF |
+|---|---|---|
+| goodpjw2008 · *TabPFN + Route Categories* (GBDT / RealMLP / DeepFM / TabPFN-3.5 / TabICL) | 48 | 0.96134 |
+| sachith7 · *stack OOF predictions* (10'u 10 katlı) | 22 | 0.96141 |
+| dariushafshar · *golem OOF library* | 14 | 0.96123 |
+| megayak · *OOF library* (RealMLP tohumları ortalanmış) | 11 | 0.96123 |
+| mitudru · *equality blocks* | 7 | 0.96131 |
+| busyaprime · *Route or distance? Both* (kratosyan'ın OOF veri seti) | 5 | 0.96122 |
+| arhancanli12, thisray, megayak honest stack, wangxintong111 | 13 | 0.96109 |
+| TabPFN-3.5 (samanyu1808 ×2, hemingweb) | 3 | 0.96127 |
+| najiama · blend 01 | 1 | 0.96192 |
+
+Fikir ve yükleme düzeni kratosyan'ın *Stacking every public OOF library* not defterinden; tüm emek üyelerin
+yazarlarına ait. İstifleyici `src/stack.py`: logit'ler üzerinde lojistik regresyon, iç içe CV (meta katlar
+`StratifiedKFold(5, seed 7)`).
+
+| İstif | İç içe CV | Public LB |
+|---|---|---|
+| Yalnız kendi 10 ailemiz (s07) | 0.96184 | 0.96119 |
+| Yalnız 124 açık üye (C=1) | 0.96205 | (yazarı: 0.96167) |
+| Kendi + açık (C=1) | 0.96210 | |
+| **Kendi + açık (C=0.001)** | **0.96213** | **0.96165** |
+
+Kaynakları tek tek çıkarınca (C=0.001) en büyük kayıp bizim ailelerimizde: −0.00007 (goodpjw2008'in 48 üyesi
+−0.00003, busyaprime −0.00002, kalanlar ≤ 0.00001). Yani kendi 10 katlı, farklı ailelerden üyelerimiz (özellikle
+hedef kodlamasız LightGBM, CatBoost, TabM, RealMLP) açık havuza yeni bilgi katıyor. Farklı kat düzenlerini
+karıştırmak doğrusal istiflemede sorun değil: her üyenin her satır tahmini o satırı görmemiş bir modelden.
+
 ## Ensemble
 
 `src/blend.py` dört yöntemi aynı aday listesinde karşılaştırır ve iç içe CV'ye göre seçer: tekrar seçilebilir
@@ -220,6 +255,7 @@ Gözlemler:
 | 5 | `s05_k10_hill_8fam.csv` | 10 kat, 8 aile (RealMLP v4+te2 dahil), hill climbing | 0.96182 | 0.96181 | 0.96114 |
 | 6 | `s06_k10_logit_9fam.csv` | 10 kat, 9 aile (+te3 GBDT'ler, CatBoost 2. tohum, RealMLP v5), lojistik istifleme | 0.96181 | 0.96181 | 0.96116 |
 | 7 | `s07_k10_10fam_tabm.csv` | s06 + TabM (3 tohum), lojistik istifleme | 0.96184 | 0.96184 | 0.96119 |
+| 8 | `s08_stack_own10fam_pub124_C0.001.csv` | kendi 10 ailemiz + 124 açık OOF üyesi, lojistik istifleme (C=0.001) | 0.96213 | 0.96213 | 0.96165 |
 
 Public LB CV'nin yaklaşık 0.0006 altında. 1 → 2 adımında CV +0.00033 iken public +0.00028 arttı. Public kısım
 test'in küçük bir parçası; 140 bin satırlık kat std'si 0.0006 olduğundan, public skorun std'si 0.001'e yakın.
