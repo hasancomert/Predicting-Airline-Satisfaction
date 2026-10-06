@@ -22,6 +22,10 @@ Groups (comma separated on the command line):
          competition labels are never used, so it is leak-free for every fold
   cnt2   label-free counts (train+test) of every pair of the 20 low-cardinality columns and of
          Flight Distance x each categorical
+  digit  decimal digits (units .. thousands) of Age, Flight Distance and the two delays
+         (generator artefacts; busyaprime's ladder: +0.0002 for a LightGBM)
+  fdd    each row's deviation from its route profile (fdprof): Business / business travel / loyal
+         flags, age and every rating minus the train+test mean of its Flight Distance value
 """
 import numpy as np
 import pandas as pd
@@ -141,7 +145,7 @@ def build(groups, train, test, orig=None):
             rate = (s["sum"] + prior * k) / (s["count"] + k)
             F[c + "_omean"] = A[c].astype(str).map(rate).fillna(prior).astype(float)
 
-    if "fdprof" in groups or "ofd" in groups:
+    if "fdprof" in groups or "ofd" in groups or "fdd" in groups:
         def profile(D):
             P = pd.DataFrame({"biz": (D["Class"] == "Business").astype(float),
                               "btrav": (D["Type of Travel"] == "Business travel").astype(float),
@@ -156,6 +160,16 @@ def build(groups, train, test, orig=None):
             prof = profile(A.iloc[:n_tt])
             for c in prof.columns:
                 F[f"fdp_{c}"] = fd.map(prof[c]).astype(float)
+        if "fdd" in groups:
+            prof = profile(A.iloc[:n_tt])
+            row = pd.DataFrame({"biz": (A["Class"] == "Business").astype(float),
+                                "btrav": (A["Type of Travel"] == "Business travel").astype(float),
+                                "loyal": (A["Customer Type"] == "Loyal Customer").astype(float),
+                                "age": A["Age"].astype(float)})
+            for c in RATINGS:
+                row[clean(c)] = A[c].astype(float)
+            for c in prof.columns:
+                F[f"fdd_{c}"] = row[c] - fd.map(prof[c]).astype(float)
         if "ofd" in groups:
             if orig is None:
                 raise ValueError("ofd needs the original data")
@@ -164,6 +178,13 @@ def build(groups, train, test, orig=None):
                 F[f"ofd_{c}"] = fd.map(prof[c]).astype(float)
             F["ofd_cnt"] = fd.map(orig["Flight Distance"].value_counts()).fillna(0)
 
+    if "digit" in groups:
+        dig = {}
+        for c in ["Age", "Flight Distance", DEP, ARR]:
+            v = A[c].fillna(0).astype(float).round().astype(np.int64)
+            for k in range(2 if c == "Age" else 4):
+                dig[f"dig_{clean(c)}_{k}"] = (v // 10 ** k % 10).astype(np.int8)
+        F = pd.concat([F, pd.DataFrame(dig, index=F.index)], axis=1)
     F.columns = [clean(c) for c in F.columns]
     return F
 

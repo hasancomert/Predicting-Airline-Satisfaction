@@ -9,6 +9,7 @@ Usage: python src/realmlp.py [feats=pub|v4] [epochs=3] [n_ens=8] [seed=42] [te=t
   v4   pub + label-free route profile (fdprof) + value counts (cnt) + original-model logit (opred)
        + in-fold target encodings (te=...; same cache as train.py, original rows not used)
   v5   v4 + logit of a RealMLP trained on the original data only (orm)
+  yk   yekenot's public view: twins + counts + 3 combinations (TE in fold), his schedule settings
   model=tabm  TabM (pytabkit TabM_D) instead of RealMLP; epochs = max epochs, patience=, bs=,
               twins=0 drops the categorical twins (TE columns already carry value identity)
 Per-fold checkpoints in cache/partial, so a restarted run resumes.
@@ -54,6 +55,9 @@ MODEL = opts.get("model", "realmlp")       # realmlp | tabm
 TWINS = int(opts.get("twins", 1))          # categorical twins of the numeric columns
 BS = int(opts.get("bs", 1024))             # TabM batch size
 PATIENCE = int(opts.get("patience", 4))    # TabM early-stopping patience (epochs)
+# best=1 (pytabkit default): the epoch with the best validation AUC is restored, and the validation set
+# is the scored fold, i.e. a selection on the OOF rows. best=0 keeps the last epoch (honest OOF).
+BEST = int(opts.get("best", 1))
 
 ORIG = int(opts.get("orig", 0))  # 1: original rows added to every training fold (+ is_orig flag)
 need_orig = FEATS in ("v4", "v5") or ORIG
@@ -125,10 +129,30 @@ if ORIG:
 X.columns = [c.replace("/", "_") for c in X.columns]
 cat_cols = [c.replace("/", "_") for c in cat_cols]
 KEYS = te_keys(TE, train, test, orig if ORIG else None) if TE else None
+if FEATS == "yk":
+    # yekenot's public RealMLP view (as used by busyaprime): twins + value counts of the categoricals
+    # and Leg room service + three combinations, one kept as a categorical and all three target
+    # encoded inside the fold; counts here over train+test (label-free)
+    D = pd.concat([full, orig[COLS]], ignore_index=True) if ORIG else full
+    for c in CATS + ["Leg room service"]:
+        X[f"_{c}_count"] = D[c].map(D.iloc[:n + m][c].value_counts()).fillna(0).to_numpy(np.float32)
+    YK = pd.DataFrame(index=D.index)
+    for cols in [("Class", "Type of Travel", "Gender"), ("Class", "Type of Travel", "Age"),
+                 ("Flight Distance", "Departure/Arrival time convenient")]:
+        key = D[cols[0]].astype(str)
+        for c in cols[1:]:
+            key = key + "_" + D[c].astype(str)
+        YK["yk_" + "_".join("".join(ch if ch.isalnum() else "_" for ch in c) for c in cols)] = \
+            pd.factorize(key)[0]
+    X[YK.columns[0] + "_"] = YK.iloc[:, 0].astype(str).astype("category")
+    cat_cols.append(YK.columns[0] + "_")
+    X.columns = [c.replace("/", "_") for c in X.columns]
+    KEYS = YK if KEYS is None else pd.concat([KEYS, YK], axis=1)
+    REALMLP.update(wd=0.015, lr_sched="flat_anneal", p_drop_sched="invsqrtp1e-3")
 
 tag = opts.get("name", f"{MODEL}_{FEATS}_e{EPOCHS}_ens{N_ENS}"
                        f"{'_' + '+'.join(TE) if TE and FEATS != 'v4' else ''}"
-                       f"{'_orig' if ORIG else ''}"
+                       f"{'_orig' if ORIG else ''}{'' if BEST else '_last'}"
                        f"{f'_s{SEED}' if SEED != 42 else ''}{f'_k{K}' if K != 5 else ''}")
 if (ROOT / "oof" / f"{tag}.npy").exists():
     print(f"{tag}: already done, skipping")
@@ -162,7 +186,8 @@ for i, (tr, va) in enumerate(folds(y, K)):
                                     val_metric_name="1-auc_ovr")
         else:
             mdl = RealMLP_TD_Classifier(**REALMLP, device=DEVICE, random_state=SEED + i,
-                                        val_metric_name="1-auc_ovr", verbosity=0)
+                                        val_metric_name="1-auc_ovr", verbosity=0,
+                                        **({} if BEST else {"stop_epoch": EPOCHS}))
         mdl.fit(Xa, ytr, X_val=Xb, y_val=y[va], cat_col_names=cat_cols)
         oof[va] = mdl.predict_proba(Xb)[:, 1]
         p = mdl.predict_proba(Xt)[:, 1]

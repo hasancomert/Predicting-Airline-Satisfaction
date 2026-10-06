@@ -2,9 +2,13 @@
 
 Usage: python src/stack.py <out_name|-> own=<file with one own group per line> pub=<all|none|file>
                            [exclude=prefix1,prefix2] [C=1.0] [ablate=1] [tf=logit|probit] [nonneg=1]
+                           [clip=<max |logit|>] [scale=1]
   own     each line is one member: tags joined by ',' are averaged (seeds); "ext_..." tags work too
   pub     all: every ext/oof/pub_*.npy (minus exclude prefixes); none; or a file of names
   ablate  leave-one-source-out deltas (source = own / prefix of the public name)
+  clip    clip member logits to [-clip, clip] (some public members have logit std ~12)
+  scale   standardise every member column (OOF mean / std, same transform on test) before the
+          penalised fit, so the L2 penalty treats members alike
   nonneg  member weights constrained to >= 0 (same penalised objective as sklearn, L-BFGS-B); a stack
           that cannot lean on small differences between near-duplicate members
 Stacker: LogisticRegression on clipped logits; nested score = each row predicted by a stacker fitted on
@@ -29,6 +33,8 @@ out = args[0] if args else "-"
 C = float(opts.get("C", 1.0))
 TF = opts.get("tf", "logit")  # logit | probit (probit of the normalized rank, as in S6E9)
 NONNEG = int(opts.get("nonneg", 0))
+CLIP = float(opts.get("clip", 0))
+SCALE = int(opts.get("scale", 0))
 _, _, y = load()
 
 
@@ -75,6 +81,11 @@ for t in pubs:
         continue
     add(t, [t], t[4:].split("_")[0])
 Z, ZT = np.column_stack(Z), np.column_stack(ZT)
+if CLIP:
+    Z, ZT = np.clip(Z, -CLIP, CLIP), np.clip(ZT, -CLIP, CLIP)
+if SCALE:
+    mu, sd = Z.mean(0), Z.std(0)
+    Z, ZT = (Z - mu) / sd, (ZT - mu) / sd
 print(f"{len(names)} members ({src.count('own')} own, {len(names) - src.count('own')} public)", flush=True)
 META = list(StratifiedKFold(5, shuffle=True, random_state=7).split(Z, y))
 
