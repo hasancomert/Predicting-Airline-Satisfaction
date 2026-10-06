@@ -1,7 +1,7 @@
 """Logistic-regression stack over many members (own groups + public OOF libraries), nested CV.
 
 Usage: python src/stack.py <out_name|-> own=<file with one own group per line> pub=<all|none|file>
-                           [exclude=prefix1,prefix2] [C=1.0] [ablate=1]
+                           [exclude=prefix1,prefix2] [C=1.0] [ablate=1] [tf=logit|probit]
   own     each line is one member: tags joined by ',' are averaged (seeds); "ext_..." tags work too
   pub     all: every ext/oof/pub_*.npy (minus exclude prefixes); none; or a file of names
   ablate  leave-one-source-out deltas (source = own / prefix of the public name)
@@ -25,6 +25,7 @@ args = [a for a in sys.argv[1:] if "=" not in a]
 opts = dict(a.split("=", 1) for a in sys.argv[1:] if "=" in a)
 out = args[0] if args else "-"
 C = float(opts.get("C", 1.0))
+TF = opts.get("tf", "logit")  # logit | probit (probit of the normalized rank, as in S6E9)
 _, _, y = load()
 
 
@@ -33,6 +34,10 @@ def path(d, x):
 
 
 def lg(p):
+    if TF == "probit":
+        from scipy.special import ndtri
+        from scipy.stats import rankdata
+        return ndtri((rankdata(p) - 0.5) / len(p))
     p = np.clip(p, 1e-6, 1 - 1e-6)
     return np.log(p / (1 - p))
 
