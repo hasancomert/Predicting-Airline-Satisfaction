@@ -1,10 +1,12 @@
 """Logistic-regression stack over many members (own groups + public OOF libraries), nested CV.
 
 Usage: python src/stack.py <out_name|-> own=<file with one own group per line> pub=<all|none|file>
-                           [exclude=prefix1,prefix2] [C=1.0] [ablate=1] [tf=logit|probit]
+                           [exclude=prefix1,prefix2] [C=1.0] [ablate=1] [tf=logit|probit] [nonneg=1]
   own     each line is one member: tags joined by ',' are averaged (seeds); "ext_..." tags work too
   pub     all: every ext/oof/pub_*.npy (minus exclude prefixes); none; or a file of names
   ablate  leave-one-source-out deltas (source = own / prefix of the public name)
+  nonneg  member weights constrained to >= 0 (same penalised objective as sklearn, L-BFGS-B); a stack
+          that cannot lean on small differences between near-duplicate members
 Stacker: LogisticRegression on clipped logits; nested score = each row predicted by a stacker fitted on
 the other 4/5 of the rows (StratifiedKFold(5, shuffle, seed 7)). The submission uses a stacker fitted on
 all rows. Writes submissions/<out_name>.csv.
@@ -26,6 +28,7 @@ opts = dict(a.split("=", 1) for a in sys.argv[1:] if "=" in a)
 out = args[0] if args else "-"
 C = float(opts.get("C", 1.0))
 TF = opts.get("tf", "logit")  # logit | probit (probit of the normalized rank, as in S6E9)
+NONNEG = int(opts.get("nonneg", 0))
 _, _, y = load()
 
 
@@ -76,11 +79,28 @@ print(f"{len(names)} members ({src.count('own')} own, {len(names) - src.count('o
 META = list(StratifiedKFold(5, shuffle=True, random_state=7).split(Z, y))
 
 
+def fit_lr(A, t):
+    """(weights, intercept) of the L2 logistic regression C * sum(logloss) + |w|^2 / 2."""
+    if not NONNEG:
+        m = LogisticRegression(C=C, max_iter=3000).fit(A, t)
+        return m.coef_.ravel(), m.intercept_[0]
+    from scipy.optimize import minimize
+
+    def f(x):
+        z = A @ x[:-1] + x[-1]
+        p = 1 / (1 + np.exp(-z))
+        loss = C * (np.logaddexp(0, z) - t * z).sum() + 0.5 * x[:-1] @ x[:-1]
+        return loss, np.r_[C * (A.T @ (p - t)) + x[:-1], C * (p - t).sum()]
+    r = minimize(f, np.zeros(A.shape[1] + 1), jac=True, method="L-BFGS-B",
+                 bounds=[(0, None)] * A.shape[1] + [(None, None)], options=dict(maxiter=5000))
+    return r.x[:-1], r.x[-1]
+
+
 def nested(cols):
     s = np.zeros(len(y))
     for a, b in META:
-        s[b] = LogisticRegression(C=C, max_iter=3000).fit(Z[a][:, cols], y[a]).decision_function(
-            Z[b][:, cols])
+        w, b0 = fit_lr(Z[a][:, cols], y[a])
+        s[b] = Z[b][:, cols] @ w + b0
     return roc_auc_score(y, s)
 
 
@@ -91,8 +111,9 @@ if int(opts.get("ablate", 0)):
     for s_ in sorted(set(src)):
         cols = [i for i in allc if src[i] != s_]
         print(f"  without {s_:15s} ({src.count(s_):3d}): {nested(cols) - full:+.6f}", flush=True)
-m = LogisticRegression(C=C, max_iter=3000).fit(Z, y)
-w = sorted(zip(m.coef_.ravel(), names), key=lambda t: -abs(t[0]))[:12]
+coef, b0 = fit_lr(Z, y)
+w = sorted(zip(coef, names), key=lambda t: -abs(t[0]))[:12]
 print("largest |weights|:", [(n[:40], round(float(c), 3)) for c, n in w])
+print(f"non-zero weights: {(np.abs(coef) > 1e-6).sum()} / {len(coef)}, negative: {(coef < -1e-6).sum()}")
 if out != "-":
-    write_submission(out, 1 / (1 + np.exp(-m.decision_function(ZT))))
+    write_submission(out, 1 / (1 + np.exp(-(ZT @ coef + b0))))
