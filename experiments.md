@@ -179,3 +179,5 @@ Rows are appended by `src/train.py`; the notes column says what changed. Decisio
 | realmlp_v4te2_e6_ens8_orig_s1_k10 | 10-fold: RealMLP v4+te2 e6 + original rows, seed 1 (Kaggle GPU) | 0.96152 ± 0.00059 | 0.96151 | - | 4161s | |
 | realmlp_pub_e6_ens8_orig_s2_k10 | 10-fold: RealMLP pub e6 + original rows, seed 2 (Kaggle GPU) | 0.96128 ± 0.00069 | 0.96127 | - | 1814s | |
 | realmlp_pub_e6_ens8_orig_s3_k10 | 10-fold: RealMLP pub e6 + original rows, seed 3 (Kaggle GPU) | 0.96129 ± 0.00070 | 0.96128 | - | 1809s | |
+| realmlp_pub_e6_ens8_orig_last_k10 | 10-fold: RealMLP pub e6 + original rows, last epoch (no selection on the scored fold) (Kaggle GPU) | 0.96127 ± 0.00071 | 0.96126 | - | 1724s | |
+| realmlp_yk_e3_ens8_orig_last_k10 | 10-fold: RealMLP yekenot view (counts + 3 combos, TE in fold) e3 + original rows, last epoch (Kaggle GPU) | 0.96145 ± 0.00070 | 0.96145 | - | 961s | |
