@@ -34,7 +34,7 @@ def log(*a):
 d = np.load(os.path.join(args.work, f"data_f{args.fold}.npz"))
 Xtr, ytr, Xva, yva, XT = d["Xctx"], d["yctx"], d["Xva"], d["yva"], d["XT"]
 cat_idx = list(d["cat_idx"])
-log(f"context={len(Xtr):,} val={len(Xva):,} test={len(XT):,} feats={X.shape[1]}")
+log(f"context={len(Xtr):,} val={len(Xva):,} test={len(XT):,} feats={Xtr.shape[1]}")
 
 # Fallback chain if the full-context fit does not fit in T4 memory.
 CONFIGS = [
