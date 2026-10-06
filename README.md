@@ -230,6 +230,11 @@ girdisi olarak probit(sıra) (0.9613, logit 0.96213), LightGBM meta-öğrenici (
 Kaynak ablasyonu (s09): kendi üyelerimiz çıkınca −0.000087, goodpjw2008 −0.000031, busyaprime −0.000025, diğer
 her kaynak ≤ 0.000006. İstif doymuş durumda: her yeni üye en fazla +0.00001 getiriyor.
 
+s10'da istifte en büyük ağırlığı alan kendi üyelerimize tohum eklendi (iç içe 0.962150, public yine 0.96171;
+s09 ile Spearman 0.999996). Ağırlıkları negatif olmayan istif 0.96200'de kaldı: 81/184 negatif ağırlık, benzer
+üyeler arasındaki farklardan gerçek bilgi çıkarıyor. Test tahminleri kat ortalaması olduğundan OOF'tan biraz
+yumuşak; istif skorunun fark kısmı test'te OOF'un 0.967 katı, C eğrisi bu bölgede düz olduğu için etkisi yok.
+
 ## Ensemble
 
 `src/blend.py` dört yöntemi aynı aday listesinde karşılaştırır ve iç içe CV'ye göre seçer: tekrar seçilebilir
@@ -280,6 +285,7 @@ Gözlemler:
 | 7 | `s07_k10_10fam_tabm.csv` | s06 + TabM (3 tohum), lojistik istifleme | 0.96184 | 0.96184 | 0.96119 |
 | 8 | `s08_stack_own10fam_pub124_C0.001.csv` | kendi 10 ailemiz + 124 açık OOF üyesi, lojistik istifleme (C=0.001) | 0.96213 | 0.96213 | 0.96165 |
 | 9 | `s09_stack_own15_pub169_C0.001.csv` | kendi 15 üyemiz (+orijinal satırlı RealMLP, kendi TabPFN-3.5, hedef kodlamasız XGB, ham TabM) + 169 açık üye, lojistik istifleme (C=0.001) | 0.96215 | 0.96215 | **0.96171** |
+| 10 | `s10_stack_own15seeds_pub169_C0.001.csv` | s09 + büyük ağırlıklı kendi üyelerine ek tohumlar (RealMLP ×4 / ×2, hedef kodlamasız XGB ×2) | 0.96215 | 0.96215 | 0.96171 |
 
 Public LB CV'nin yaklaşık 0.0006 altında. 1 → 2 adımında CV +0.00033 iken public +0.00028 arttı. Public kısım
 test'in küçük bir parçası; 140 bin satırlık kat std'si 0.0006 olduğundan, public skorun std'si 0.001'e yakın.
