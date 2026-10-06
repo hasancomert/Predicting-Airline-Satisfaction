@@ -286,7 +286,8 @@ Gözlemler:
 | 8 | `s08_stack_own10fam_pub124_C0.001.csv` | kendi 10 ailemiz + 124 açık OOF üyesi, lojistik istifleme (C=0.001) | 0.96213 | 0.96213 | 0.96165 |
 | 9 | `s09_stack_own15_pub169_C0.001.csv` | kendi 15 üyemiz (+orijinal satırlı RealMLP, kendi TabPFN-3.5, hedef kodlamasız XGB, ham TabM) + 169 açık üye, lojistik istifleme (C=0.001) | 0.96215 | 0.96215 | **0.96171** |
 | 10 | `s10_stack_own15seeds_pub169_C0.001.csv` | s09 + büyük ağırlıklı kendi üyelerine ek tohumlar (RealMLP ×4 / ×2, hedef kodlamasız XGB ×2) | 0.96215 | 0.96215 | 0.96171 |
-| 11 | `s11_stack_own15_pub178_C0.001.csv` | s10 + yenilenen açık havuz (kratosyan, denpugovkin, amanatar v5, kagankoral; 178 üye) | 0.96216 | 0.96216 | **0.96173** |
+| 11 | `s11_stack_own15_pub178_C0.001.csv` | s10 + yenilenen açık havuz (kratosyan, denpugovkin, amanatar v5, kagankoral; 178 üye) | 0.96216 | 0.96216 | 0.96173 |
+| 12 | `s12_stack_own17_pub178_C0.001.csv` | s11 + kendi RealMLP'miz yekenot görünümünde, orijinal satırlarla (3 tohum, son epoch) ve v4 eklentili varyantı | 0.96217 | 0.96217 | **0.96174** |
 
 Public LB CV'nin yaklaşık 0.0006 altında. 1 → 2 adımında CV +0.00033 iken public +0.00028 arttı. Public kısım
 test'in küçük bir parçası; 140 bin satırlık kat std'si 0.0006 olduğundan, public skorun std'si 0.001'e yakın.
