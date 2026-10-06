@@ -105,6 +105,12 @@ Rows are appended by `src/train.py`; the notes column says what changed. Decisio
 - Aynı liste, MLP 10 koşu ortalaması (0.96022) ile: iç içe 0.96159, değişmedi; `s03_final.csv` korundu.
 - TE girdili MLP (0.95957 / 0.95980) harmanda ağırlık almadı (0.003); hedef kodlamasız XGBoost (0.96084), hedef kodlamasız LightGBM varken 0.009.
 - CatBoost FS1 lr 0.05 (0.96065), CatBoost FS2 lr 0.08 (0.96096) eklenince ≈0.
+- s09 açık havuz yenilemesi (06.10): goodpjw2008 "TabPFN member" veri seti P8'dekilerle aynı (korelasyon 1.0),
+  busyaprime'ın yeni sürümü eskisiyle aynı (≥0.9998); yeni olan amanatar'ın 7 motoru: iç içe 0.962130 → 0.962135 (gürültü).
+- İstif girdisi probit(sıra) (S6E9 hilesi): C=0.01 0.961015, C=0.001 0.961265 — logit (0.962127) çok daha iyi.
+- RealMLP pub + orijinal satırlar (0.96127) ayrı üye olarak: 0.962135 → 0.962137 (ağırlığı 0.095, en büyük 2.).
+- LightGBM meta-öğrenici (180 logit, 15 yaprak, erken durdurma): 0.961997 < LR 0.962137; sıra harmanı
+  (%20 GBDT) 0.962145 (+0.000008, gürültü) → lojistik istif kaldı.
 | realmlp_pub_e3_ens8 | RealMLP public recipe (raw + categorical twins), 3 epochs, n_ens 8 | 0.96077 ± 0.00054 | 0.96076 | - | 1126s | |
 | realmlp_v4_e6_ens8 | RealMLP v4: + route profile, counts, original-model logit, in-fold TE (te1, tefd), 6 epochs | 0.96116 ± 0.00054 | 0.96114 | - | 3817s | |
 | realmlp_pub_e6_ens8_s1 | RealMLP public recipe, 6 epochs, seed 1 | 0.96101 ± 0.00054 | 0.96100 | - | 2487s | |
