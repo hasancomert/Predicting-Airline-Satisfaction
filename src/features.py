@@ -26,6 +26,9 @@ Groups (comma separated on the command line):
          (generator artefacts; busyaprime's ladder: +0.0002 for a LightGBM)
   fdd    each row's deviation from its route profile (fdprof): Business / business travel / loyal
          flags, age and every rating minus the train+test mean of its Flight Distance value
+  aux    expected value of every rating given the other 20 columns (LightGBM regression, 5-fold
+         cross-predicted over train+test(+original) rows; label-free, idea from sachith7's aux_ev)
+         and the rating minus that expectation; cached in cache/aux_<n rows>.npy
 """
 import numpy as np
 import pandas as pd
@@ -178,6 +181,8 @@ def build(groups, train, test, orig=None):
                 F[f"ofd_{c}"] = fd.map(prof[c]).astype(float)
             F["ofd_cnt"] = fd.map(orig["Flight Distance"].value_counts()).fillna(0)
 
+    if "aux" in groups:
+        F = pd.concat([F, aux_block(A)], axis=1)
     if "digit" in groups:
         dig = {}
         for c in ["Age", "Flight Distance", DEP, ARR]:
@@ -224,3 +229,34 @@ def te_keys(spec, train, test, orig=None):
         for c in RATINGS + ["Age"]:
             keys[f"te_ctc_{clean(c)}"] = cc * 1000 + codes[c]
     return pd.DataFrame(keys)
+
+
+def aux_block(A):
+    """Label-free rating expectations: each rating regressed on the other 20 columns, cross-predicted."""
+    from pathlib import Path
+    import lightgbm as lgb
+    from sklearn.model_selection import KFold
+    path = Path(__file__).resolve().parent.parent / "cache" / f"aux_{len(A)}.npy"
+    if path.exists():
+        E = np.load(path)
+    else:
+        X = pd.DataFrame({c: (pd.Categorical(A[c]) if c in CATS else A[c].astype(float)) for c in COLS})
+        X.columns = [clean(c) for c in X.columns]
+        E = np.zeros((len(A), len(RATINGS)), dtype=np.float32)
+        for j, r in enumerate(RATINGS):
+            cols = [c for c in X.columns if c != clean(r)]
+            t = A[r].astype(float).to_numpy()
+            for a, b in KFold(5, shuffle=True, random_state=0).split(X):
+                m = lgb.LGBMRegressor(n_estimators=400, learning_rate=0.08, num_leaves=127,
+                                      min_child_samples=50, subsample=0.8, subsample_freq=1,
+                                      colsample_bytree=0.8, verbose=-1, n_jobs=3, random_state=j)
+                m.fit(X.iloc[a][cols], t[a])
+                E[b, j] = m.predict(X.iloc[b][cols])
+            print(f"  aux: {r} done", flush=True)
+        path.parent.mkdir(exist_ok=True)
+        np.save(path, E)
+    out = {}
+    for j, r in enumerate(RATINGS):
+        out[f"aux_ev_{clean(r)}"] = E[:, j]
+        out[f"aux_res_{clean(r)}"] = A[r].astype(float).to_numpy() - E[:, j]
+    return pd.DataFrame(out, index=A.index)
