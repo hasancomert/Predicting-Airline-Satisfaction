@@ -146,6 +146,36 @@ for c in ("lgbm_champion", "lgbm_te", "xgb_gpu", "catboost_gpu", "pytabkit_realm
           "torch_scratch"):
     add("am_" + c, z["oof_" + c], z["test_" + c], "amanatar")
 
+# kratosyan "route ID + teacher" (10 folds seed 42, TE inside the fold, 5% inner split for early stopping,
+# teacher fitted on the original data only, sachith7's label-free aux_ev features)
+for f in sorted(glob.glob(str(d("kn__s6e10-xgboost-realmlp-route-id-teacher") / "members" / "*.npz"))):
+    z = np.load(f, allow_pickle=False)
+    add("kr_" + os.path.basename(f)[:-4], z["oof"], z["test"], "kratosyan")
+
+# denpugovkin numeric-key CatBoost CTR (5 folds, 10% inner split for early stopping): per-fold files
+p = d("kn__s6e10-numeric-keys-catboost-ctr") / "exp020"
+fo, ft, nf = np.full(len(y), np.nan), np.zeros(len(sid)), 0
+for f in sorted(glob.glob(str(p / "catboost_numeric_ctr_fold*.npz"))):
+    z = np.load(f, allow_pickle=False)
+    pos = pd.Series(np.arange(len(tid)), index=tid).loc[z["valid_ids"]].to_numpy()
+    fo[pos] = z["valid_pred"]
+    ft += pd.Series(z["test_pred"], index=z["test_ids"]).loc[sid].to_numpy()
+    nf += 1
+add("dp_catboost_numeric_ctr", fo, ft / max(nf, 1), "denpugovkin")
+
+# amanatar's v5 run: only the engine that is new relative to v1 (row-level TE LightGBM)
+z = np.load(d("kn__s6e10-the-original-prior-stack-v5") / "oof_artifacts.npz", allow_pickle=False)
+assert (z["y"] == y).all()
+add("am_lgbm_te_rows", z["oof_lgbm_te_rows"], z["test_lgbm_te_rows"], "amanatar")
+
+# kagankoral "Encodings + CatBoost + RealMLP" (5 folds seed 42, TE inside the fold with an inner CV)
+p = d("kn__s6e10-encodings-catboost-realmlp-lb-0-961")
+o = pd.read_csv(p / "oof_members.csv").set_index("id").loc[tid]
+t = pd.read_csv(p / "test_members.csv").set_index("id").loc[sid]
+for c in t.columns:
+    if c in o.columns:
+        add("kg_" + c, o[c].to_numpy(), t[c].to_numpy(), "kagankoral")
+
 k = pd.DataFrame(kept, columns=["name", "source", "oof_auc"])
 print(k.groupby("source").oof_auc.agg(["size", "max"]).sort_values("max", ascending=False).round(5))
 print(f"kept {len(kept)} members; rejected {len(rejected)}: {rejected}")
