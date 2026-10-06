@@ -113,6 +113,7 @@ Rows are appended by `src/train.py`; the notes column says what changed. Decisio
   (%20 GBDT) 0.962145 (+0.000008, gürültü) → lojistik istif kaldı.
 - Hedef kodlamasız XGB t1 (0.96102) ayrı üye: 0.962137 → 0.962145 (ağırlığı 0.074).
 - Hedef kodlamasız CatBoost lr 0.08 (0.96068) ayrı üye: 0.962145 → 0.962145 (katkı yok, listeye alınmadı).
+- Hedef kodlamasız LightGBM extra_trees (0.95625): 0.962145 → 0.962145 (katkı yok).
 | realmlp_pub_e3_ens8 | RealMLP public recipe (raw + categorical twins), 3 epochs, n_ens 8 | 0.96077 ± 0.00054 | 0.96076 | - | 1126s | |
 | realmlp_v4_e6_ens8 | RealMLP v4: + route profile, counts, original-model logit, in-fold TE (te1, tefd), 6 epochs | 0.96116 ± 0.00054 | 0.96114 | - | 3817s | |
 | realmlp_pub_e6_ens8_s1 | RealMLP public recipe, 6 epochs, seed 1 | 0.96101 ± 0.00054 | 0.96100 | - | 2487s | |
@@ -163,3 +164,4 @@ Rows are appended by `src/train.py`; the notes column says what changed. Decisio
 | realmlp_pub_e6_ens8_orig_k10 | 10-fold: RealMLP pub e6 + original rows (Kaggle GPU) | 0.96128 ± 0.00069 | 0.96127 | - | 1851s | |
 | xgb_base+cnt+inter+fdprof_lr0.03_t1_orig_k10 | 10-fold: no-TE XGB t1 lr0.03 | 0.96103 ± 0.00063 | 0.96102 | 1258 | 3180s | |
 | cat_base+cnt+inter+fdprof_lr0.08_orig_k10 | 10-fold: no-TE CatBoost lr0.08 | 0.96069 ± 0.00074 | 0.96068 | 2162 | 7228s | |
+| lgbm_base+cnt+inter+fdprof_lr0.03_t2_orig_extra_treesTrue_k10 | 10-fold: no-TE LGBM t2 lr0.03 extra_trees | 0.95626 ± 0.00078 | 0.95625 | 5632 | 4131s | |
