@@ -112,6 +112,7 @@ Rows are appended by `src/train.py`; the notes column says what changed. Decisio
 - LightGBM meta-öğrenici (180 logit, 15 yaprak, erken durdurma): 0.961997 < LR 0.962137; sıra harmanı
   (%20 GBDT) 0.962145 (+0.000008, gürültü) → lojistik istif kaldı.
 - Hedef kodlamasız XGB t1 (0.96102) ayrı üye: 0.962137 → 0.962145 (ağırlığı 0.074).
+- Hedef kodlamasız CatBoost lr 0.08 (0.96068) ayrı üye: 0.962145 → 0.962145 (katkı yok, listeye alınmadı).
 | realmlp_pub_e3_ens8 | RealMLP public recipe (raw + categorical twins), 3 epochs, n_ens 8 | 0.96077 ± 0.00054 | 0.96076 | - | 1126s | |
 | realmlp_v4_e6_ens8 | RealMLP v4: + route profile, counts, original-model logit, in-fold TE (te1, tefd), 6 epochs | 0.96116 ± 0.00054 | 0.96114 | - | 3817s | |
 | realmlp_pub_e6_ens8_s1 | RealMLP public recipe, 6 epochs, seed 1 | 0.96101 ± 0.00054 | 0.96100 | - | 2487s | |
