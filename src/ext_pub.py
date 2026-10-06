@@ -138,6 +138,14 @@ for f in sorted(glob.glob(str(d("ds__ps-s6e10-airline-satisfaction-artifacts") /
     if "oof" in z.files and "test" in z.files:
         add("sd_" + os.path.basename(f)[6:-4], z["oof"], z["test"], "sadamtorres")
 
+# amanatar: 7 base engines (5 folds, target encodings fitted inside each fold, original-data teacher);
+# their three blends of these engines are skipped
+z = np.load(d("kn__s6e10-realmlp-original-prior-gpu") / "oof_artifacts.npz", allow_pickle=False)
+assert (z["y"] == y).all()
+for c in ("lgbm_champion", "lgbm_te", "xgb_gpu", "catboost_gpu", "pytabkit_realmlp", "torch_prior",
+          "torch_scratch"):
+    add("am_" + c, z["oof_" + c], z["test_" + c], "amanatar")
+
 k = pd.DataFrame(kept, columns=["name", "source", "oof_auc"])
 print(k.groupby("source").oof_auc.agg(["size", "max"]).sort_values("max", ascending=False).round(5))
 print(f"kept {len(kept)} members; rejected {len(rejected)}: {rejected}")
