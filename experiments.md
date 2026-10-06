@@ -116,6 +116,7 @@ Rows are appended by `src/train.py`; the notes column says what changed. Decisio
 - Hedef kodlamasız CatBoost lr 0.08 (0.96068) ayrı üye: 0.962145 → 0.962145 (katkı yok, listeye alınmadı).
 - Hedef kodlamasız LightGBM extra_trees (0.95625): 0.962145 → 0.962145 (katkı yok).
 - s10: negatif olmayan ağırlıklı istif (nonneg=1, aynı cezalı amaç, L-BFGS-B): C=0.001 0.962006, 0.01 0.961989, 0.1 0.961988 (55/184 üye sıfırdan farklı) — serbest LR 0.962149 (81/184 negatif ağırlık). Benzer üyeler arasındaki farklar (negatif ağırlıklar) iç içe CV'de gerçek bilgi taşıyor → serbest LR kaldı.
+- s10 kontrol: test tahminleri kat ortalaması olduğu için OOF'tan yumuşak mı? Üye logit std oranı test/OOF 0.991–1.002; üyelerin ortak eğilim etrafındaki sapması 0.88–1.00 (medyan 0.95); istif skorunun ortak kısmı 0.998, fark (kontrast) kısmı 0.967. Yani test'te kontrast ağırlıkları fiilen ~%3 zayıf; C eğrisi bu bölgede düz, düzeltme gereksiz.
 | realmlp_pub_e3_ens8 | RealMLP public recipe (raw + categorical twins), 3 epochs, n_ens 8 | 0.96077 ± 0.00054 | 0.96076 | - | 1126s | |
 | realmlp_v4_e6_ens8 | RealMLP v4: + route profile, counts, original-model logit, in-fold TE (te1, tefd), 6 epochs | 0.96116 ± 0.00054 | 0.96114 | - | 3817s | |
 | realmlp_pub_e6_ens8_s1 | RealMLP public recipe, 6 epochs, seed 1 | 0.96101 ± 0.00054 | 0.96100 | - | 2487s | |
