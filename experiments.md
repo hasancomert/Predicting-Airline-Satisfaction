@@ -165,3 +165,7 @@ Rows are appended by `src/train.py`; the notes column says what changed. Decisio
 | xgb_base+cnt+inter+fdprof_lr0.03_t1_orig_k10 | 10-fold: no-TE XGB t1 lr0.03 | 0.96103 ± 0.00063 | 0.96102 | 1258 | 3180s | |
 | cat_base+cnt+inter+fdprof_lr0.08_orig_k10 | 10-fold: no-TE CatBoost lr0.08 | 0.96069 ± 0.00074 | 0.96068 | 2162 | 7228s | |
 | lgbm_base+cnt+inter+fdprof_lr0.03_t2_orig_extra_treesTrue_k10 | 10-fold: no-TE LGBM t2 lr0.03 extra_trees | 0.95626 ± 0.00078 | 0.95625 | 5632 | 4131s | |
+| realmlp_v4te2_e6_ens8_orig_k10 | 10-fold: RealMLP v4+te2 e6 + original rows (Kaggle GPU) | 0.96152 ± 0.00061 | 0.96149 | - | 4181s | |
+| realmlp_pub_e6_ens8_orig_s1_k10 | 10-fold: RealMLP pub e6 + original rows, seed 1 (Kaggle GPU) | 0.96129 ± 0.00072 | 0.96128 | - | 1842s | |
+| tabm_pub_k10 | 10-fold: TabM on raw columns + categorical twins (Kaggle GPU) | 0.96011 ± 0.00070 | 0.96001 | - | 7269s | |
+| tabpfn35_te4op_k5 | TabPFN-3.5 full fold context (5 folds, seed 42) on 22 cols: raw minus Gender/delays/Food, in-fold TE of route and route x Class/Travel/Customer, opred logit (Kaggle 2xT4) | 0.96121 ± 0.00053 | 0.96120 | - | 15720s | |
