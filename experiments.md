@@ -152,3 +152,4 @@ Rows are appended by `src/train.py`; the notes column says what changed. Decisio
 | tabm_v4te2_k10 | 10-fold: TabM (pytabkit TabM_D) on v4 + te2 features, no twins (Kaggle GPU) | 0.96139 ± 0.00062 | 0.96137 | - | 11371s | |
 | tabm_v4te2_bs2048_s1_k10 | 10-fold: TabM v4+te2, batch 2048, seed 1 (Kaggle GPU) | 0.96139 ± 0.00061 | 0.96137 | - | 9872s | |
 | tabm_v4te2_s2_k10 | 10-fold: TabM v4+te2, seed 2 (Kaggle GPU) | 0.96137 ± 0.00060 | 0.96133 | - | 10903s | |
+| realmlp_pub_e6_ens8_orig_k10 | 10-fold: RealMLP pub e6 + original rows (Kaggle GPU) | 0.96128 ± 0.00069 | 0.96127 | - | 1851s | |

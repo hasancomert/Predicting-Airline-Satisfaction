@@ -115,7 +115,9 @@ if FEATS in ("v4", "v5"):
     extra = [c for c in F.columns
              if c.startswith(("fdp_", "opred")) or c.endswith("_cnt") or c.startswith("cnt_")]
     for c in extra:
-        X[c] = logit(F[c]) if c == "opred" else F[c].to_numpy(np.float32)
+        v = logit(F[c]) if c == "opred" else F[c].to_numpy(np.float32)
+        # 2052 original rows sit on routes absent from train+test (no route profile): column mean
+        X[c] = np.where(np.isnan(v), np.nanmean(v[:n + m]), v).astype(np.float32)
 if FEATS == "v5":
     X["orm"] = logit(np.r_[orig_realmlp(), np.full(n_o, 0.5)])  # (orig rows: no orm, neutral)
 if ORIG:
