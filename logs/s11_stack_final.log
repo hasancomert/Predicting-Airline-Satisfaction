@@ -1,0 +1,5 @@
+193 members (15 own, 178 public)
+nested CV, all members: 0.962159
+largest |weights|: [('pub_bp_realmlp', 0.129), ('own:realmlp_pub_e6_ens8_orig_k10', 0.087), ('pub_gp_tabpfn_catfd10', 0.078), ('own:xgb_base+cnt+inter+fdprof_lr0.03_t1_', 0.077), ('pub_dp_catboost_numeric_ctr', 0.068), ('pub_gp_tabpfn_catfd', 0.067), ('pub_pfn_hemingweb_raw', 0.063), ('pub_gp_realmlp_pub_s1', -0.063), ('own:cat_base+te1+tefd+fdprof+cnt+inter+t', 0.061), ('pub_gp_realmlp_pub_s2', -0.057), ('pub_sa_rmlp_raw_aux_k10', 0.052), ('pub_pfn_samanyu_seeds', 0.052)]
+non-zero weights: 193 / 193, negative: 85
+s11_stack_own15_pub178_C0.001.csv: format OK (299844 rows, mean 0.4435)
