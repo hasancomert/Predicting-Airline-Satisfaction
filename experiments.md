@@ -181,3 +181,6 @@ Rows are appended by `src/train.py`; the notes column says what changed. Decisio
 | realmlp_pub_e6_ens8_orig_s3_k10 | 10-fold: RealMLP pub e6 + original rows, seed 3 (Kaggle GPU) | 0.96129 ± 0.00070 | 0.96128 | - | 1809s | |
 | realmlp_pub_e6_ens8_orig_last_k10 | 10-fold: RealMLP pub e6 + original rows, last epoch (no selection on the scored fold) (Kaggle GPU) | 0.96127 ± 0.00071 | 0.96126 | - | 1724s | |
 | realmlp_yk_e3_ens8_orig_last_k10 | 10-fold: RealMLP yekenot view (counts + 3 combos, TE in fold) e3 + original rows, last epoch (Kaggle GPU) | 0.96145 ± 0.00070 | 0.96145 | - | 961s | |
+| realmlp_yk_e3_ens8_orig_last_s1_k10 | 10-fold: RealMLP yekenot view + orig, last epoch, seed 1 (Kaggle GPU) | 0.96143 ± 0.00070 | 0.96142 | - | 1130s | |
+| realmlp_yk_e3_ens8_orig_last_s2_k10 | 10-fold: RealMLP yekenot view + orig, last epoch, seed 2 (Kaggle GPU) | 0.96142 ± 0.00068 | 0.96142 | - | 1147s | |
+| realmlp_ykv4_e3_ens8_te1+tefd_orig_last_k10 | 10-fold: RealMLP yekenot view + v4 extras (route profile, counts, opred) + TE te1/tefd + orig, last epoch (Kaggle GPU) | 0.96141 ± 0.00059 | 0.96142 | - | 1257s | |
