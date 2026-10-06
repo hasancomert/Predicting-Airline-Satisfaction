@@ -172,3 +172,4 @@ Rows are appended by `src/train.py`; the notes column says what changed. Decisio
 | realmlp_pub_e6_ens8_orig_s1_k10 | 10-fold: RealMLP pub e6 + original rows, seed 1 (Kaggle GPU) | 0.96129 ± 0.00072 | 0.96128 | - | 1842s | |
 | tabm_pub_k10 | 10-fold: TabM on raw columns + categorical twins (Kaggle GPU) | 0.96011 ± 0.00070 | 0.96001 | - | 7269s | |
 | tabpfn35_te4op_k5 | TabPFN-3.5 full fold context (5 folds, seed 42) on 22 cols: raw minus Gender/delays/Food, in-fold TE of route and route x Class/Travel/Customer, opred logit (Kaggle 2xT4) | 0.96121 ± 0.00053 | 0.96120 | - | 15720s | |
+| xgb_base+cnt+inter+fdprof_lr0.03_t1_orig_s7_k10 | 10-fold: no-TE XGB t1 lr0.03 seed 7 | 0.96105 ± 0.00065 | 0.96104 | 1303 | 3081s | |
