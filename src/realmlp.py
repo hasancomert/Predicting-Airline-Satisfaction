@@ -60,7 +60,7 @@ PATIENCE = int(opts.get("patience", 4))    # TabM early-stopping patience (epoch
 BEST = int(opts.get("best", 1))
 
 ORIG = int(opts.get("orig", 0))  # 1: original rows added to every training fold (+ is_orig flag)
-need_orig = FEATS in ("v4", "v5") or ORIG
+need_orig = FEATS in ("v4", "v5") or ORIG or opts.get("plus", "") == "v4"
 if need_orig:
     train, test, y, orig, yo = load(orig=True)
 else:
@@ -113,7 +113,8 @@ X, cat_cols = twin_frame(pd.concat([full, orig[COLS]], ignore_index=True) if ORI
 if not TWINS:
     X = X.drop(columns=[c for c in cat_cols if c.endswith("_cat_")])
     cat_cols = [c for c in cat_cols if not c.endswith("_cat_")]
-if FEATS in ("v4", "v5"):
+PLUS = opts.get("plus", "")  # plus=v4: the v4 extras (route profile, counts, opred) on top of feats=yk
+if FEATS in ("v4", "v5") or PLUS == "v4":
     groups = ["base", "fdprof", "cnt", "opred"]
     F = build(groups, train, test, orig).iloc[:n + m + n_o]
     extra = [c for c in F.columns
@@ -150,7 +151,7 @@ if FEATS == "yk":
     KEYS = YK if KEYS is None else pd.concat([KEYS, YK], axis=1)
     REALMLP.update(wd=0.015, lr_sched="flat_anneal", p_drop_sched="invsqrtp1e-3")
 
-tag = opts.get("name", f"{MODEL}_{FEATS}_e{EPOCHS}_ens{N_ENS}"
+tag = opts.get("name", f"{MODEL}_{FEATS}{PLUS}_e{EPOCHS}_ens{N_ENS}"
                        f"{'_' + '+'.join(TE) if TE and FEATS != 'v4' else ''}"
                        f"{'_orig' if ORIG else ''}{'' if BEST else '_last'}"
                        f"{f'_s{SEED}' if SEED != 42 else ''}{f'_k{K}' if K != 5 else ''}")
