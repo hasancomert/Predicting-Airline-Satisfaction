@@ -55,7 +55,8 @@ TWINS = int(opts.get("twins", 1))          # categorical twins of the numeric co
 BS = int(opts.get("bs", 1024))             # TabM batch size
 PATIENCE = int(opts.get("patience", 4))    # TabM early-stopping patience (epochs)
 
-need_orig = FEATS in ("v4", "v5")
+ORIG = int(opts.get("orig", 0))  # 1: original rows added to every training fold (+ is_orig flag)
+need_orig = FEATS in ("v4", "v5") or ORIG
 if need_orig:
     train, test, y, orig, yo = load(orig=True)
 else:
@@ -63,6 +64,7 @@ else:
     orig = None
 n, m = len(train), len(test)
 full = pd.concat([train[COLS], test[COLS]], ignore_index=True)
+n_o = len(orig) if ORIG else 0
 
 
 def twin_frame(D):
@@ -103,25 +105,28 @@ def orig_realmlp():
     return p
 
 
-X, cat_cols = twin_frame(full)
+X, cat_cols = twin_frame(pd.concat([full, orig[COLS]], ignore_index=True) if ORIG else full)
 if not TWINS:
     X = X.drop(columns=[c for c in cat_cols if c.endswith("_cat_")])
     cat_cols = [c for c in cat_cols if not c.endswith("_cat_")]
 if FEATS in ("v4", "v5"):
     groups = ["base", "fdprof", "cnt", "opred"]
-    F = build(groups, train, test, orig).iloc[:n + m]
+    F = build(groups, train, test, orig).iloc[:n + m + n_o]
     extra = [c for c in F.columns
              if c.startswith(("fdp_", "opred")) or c.endswith("_cnt") or c.startswith("cnt_")]
     for c in extra:
         X[c] = logit(F[c]) if c == "opred" else F[c].to_numpy(np.float32)
 if FEATS == "v5":
-    X["orm"] = logit(orig_realmlp())
+    X["orm"] = logit(np.r_[orig_realmlp(), np.full(n_o, 0.5)])  # (orig rows: no orm, neutral)
+if ORIG:
+    X["is_orig"] = np.r_[np.zeros(n + m), np.ones(n_o)].astype(np.float32)
 X.columns = [c.replace("/", "_") for c in X.columns]
 cat_cols = [c.replace("/", "_") for c in cat_cols]
-KEYS = te_keys(TE, train, test) if TE else None
+KEYS = te_keys(TE, train, test, orig if ORIG else None) if TE else None
 
 tag = opts.get("name", f"{MODEL}_{FEATS}_e{EPOCHS}_ens{N_ENS}"
                        f"{'_' + '+'.join(TE) if TE and FEATS != 'v4' else ''}"
+                       f"{'_orig' if ORIG else ''}"
                        f"{f'_s{SEED}' if SEED != 42 else ''}{f'_k{K}' if K != 5 else ''}")
 if (ROOT / "oof" / f"{tag}.npy").exists():
     print(f"{tag}: already done, skipping")
@@ -141,10 +146,12 @@ for i, (tr, va) in enumerate(folds(y, K)):
         oof[va], p = d["oof"], d["pred"]
         print(f"  fold {i}: resumed from checkpoint", flush=True)
     else:
-        Xa, Xb, Xt = X.iloc[tr].reset_index(drop=True), X.iloc[va].reset_index(drop=True), \
-            X.iloc[n:].reset_index(drop=True)
+        ktr = np.r_[tr, np.arange(n + m, n + m + n_o)] if ORIG else tr
+        ytr = np.r_[y[tr], yo] if ORIG else y[tr]
+        Xa, Xb, Xt = X.iloc[ktr].reset_index(drop=True), X.iloc[va].reset_index(drop=True), \
+            X.iloc[n:n + m].reset_index(drop=True)
         if KEYS is not None:
-            cols, etr, eva, ete = te_block(KEYS, i, tr, y[tr], va, n, m, 0, K)
+            cols, etr, eva, ete = te_block(KEYS, i, ktr, ytr, va, n, m, ORIG, K)
             add = lambda d, e: pd.concat([d, pd.DataFrame(e, columns=cols)], axis=1)
             Xa, Xb, Xt = add(Xa, etr), add(Xb, eva), add(Xt, ete)
         if MODEL == "tabm":
@@ -154,7 +161,7 @@ for i, (tr, va) in enumerate(folds(y, K)):
         else:
             mdl = RealMLP_TD_Classifier(**REALMLP, device=DEVICE, random_state=SEED + i,
                                         val_metric_name="1-auc_ovr", verbosity=0)
-        mdl.fit(Xa, y[tr], X_val=Xb, y_val=y[va], cat_col_names=cat_cols)
+        mdl.fit(Xa, ytr, X_val=Xb, y_val=y[va], cat_col_names=cat_cols)
         oof[va] = mdl.predict_proba(Xb)[:, 1]
         p = mdl.predict_proba(Xt)[:, 1]
         np.savez(ck, oof=oof[va], pred=p)
