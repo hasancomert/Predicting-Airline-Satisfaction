@@ -288,7 +288,8 @@ Gözlemler:
 | 10 | `s10_stack_own15seeds_pub169_C0.001.csv` | s09 + büyük ağırlıklı kendi üyelerine ek tohumlar (RealMLP ×4 / ×2, hedef kodlamasız XGB ×2) | 0.96215 | 0.96215 | 0.96171 |
 | 11 | `s11_stack_own15_pub178_C0.001.csv` | s10 + yenilenen açık havuz (kratosyan, denpugovkin, amanatar v5, kagankoral; 178 üye) | 0.96216 | 0.96216 | 0.96173 |
 | 12 | `s12_stack_own17_pub178_C0.001.csv` | s11 + kendi RealMLP'miz yekenot görünümünde, orijinal satırlarla (3 tohum, son epoch) ve v4 eklentili varyantı | 0.96217 | 0.96217 | 0.96174 |
-| 13 | `s13_stack_own19_pub178_C0.001.csv` | s12 + yekenot ailesinde ek RealMLP tohum/varyantları (sütun çifti TE'li sürüm 0.96150) | 0.96217 | 0.96217 | **0.96175** |
+| 13 | `s13_stack_own19_pub178_C0.001.csv` | s12 + yekenot ailesinde ek RealMLP tohum/varyantları (sütun çifti TE'li sürüm 0.96150) | 0.96217 | 0.96217 | 0.96175 |
+| 14 | `s14_stack_own19seeds_pub184_C0.001.csv` | s13 + Kaggle CPU'da üretilen ek RealMLP tohumları (GPU kotası harcamadan) | 0.96217 | 0.96217 | **0.96175** |
 
 Public LB CV'nin yaklaşık 0.0006 altında. 1 → 2 adımında CV +0.00033 iken public +0.00028 arttı. Public kısım
 test'in küçük bir parçası; 140 bin satırlık kat std'si 0.0006 olduğundan, public skorun std'si 0.001'e yakın.
