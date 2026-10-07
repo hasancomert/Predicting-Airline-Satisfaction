@@ -2,6 +2,8 @@
 
 Usage:
   python kaggle/gpu_kernel.py push <slug> "<command>" ["<command>" ...]   # build + push
+  python kaggle/gpu_kernel.py pushcpu <slug> "<command>" ...   # same on a CPU session (no GPU quota;
+                                                               # 4 cores, ~30 GB RAM)
   python kaggle/gpu_kernel.py status <slug>
   python kaggle/gpu_kernel.py fetch <slug>          # download outputs into oof/ and preds/
 Commands run from the project root inside the kernel, e.g.
@@ -54,7 +56,7 @@ for c in COMMANDS:
 '''
 
 
-def push(slug, commands):
+def push(slug, commands, gpu=True):
     d = BUILD / slug
     shutil.rmtree(d, ignore_errors=True)
     d.mkdir(parents=True)
@@ -62,7 +64,7 @@ def push(slug, commands):
     code = RUNNER.replace("__FILES__", repr(files)).replace("__COMMANDS__", repr(commands))
     (d / "run.py").write_text(code)
     meta = {"id": f"{USER}/{slug}", "title": slug, "code_file": "run.py", "language": "python",
-            "kernel_type": "script", "is_private": True, "enable_gpu": True,
+            "kernel_type": "script", "is_private": True, "enable_gpu": gpu,
             "enable_internet": True, "competition_sources": ["playground-series-s6e10"],
             "dataset_sources": ["arseniyshutko/binary-aviation-satisfaction-129k"],
             "kernel_sources": []}
@@ -85,6 +87,8 @@ if __name__ == "__main__":
     cmd, slug = sys.argv[1], sys.argv[2]
     if cmd == "push":
         push(slug, sys.argv[3:])
+    elif cmd == "pushcpu":
+        push(slug, sys.argv[3:], gpu=False)
     elif cmd == "status":
         subprocess.run(["kaggle", "kernels", "status", f"{USER}/{slug}"])
     elif cmd == "fetch":
