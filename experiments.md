@@ -62,6 +62,7 @@ Rows are appended by `src/train.py`; the notes column says what changed. Decisio
 | 12 | s12_stack_own17_pub178_C0.001.csv | s11 + kendi iki yeni RealMLP üyemiz: yekenot görünümü + orijinal satırlar, son epoch, 3 tohum (ortalama 0.96147; ağırlık 0.102), aynı görünüm + v4 eklentileri + fold içi TE (0.96142). s11 ile Spearman 0.99994 | 0.962167 | 0.962167 | 0.96174 (14/965) |
 | 13 | s13_stack_own19_pub178_C0.001.csv | s12 + RealMLP yk+v4 tohum 1/2 (ortalama), yk+v4+sütun çifti TE (0.96150), yk 5 epoch (0.96138, ağırlık 0.100). İç içe CV değişmedi (varyantlar 0.962164–0.962167); ek tohumlar test gürültüsünü azaltmak için. s12 ile Spearman 0.99995 | 0.962167 | 0.962167 | 0.96175 (17/968) |
 | 14 | s14_stack_own19seeds_pub184_C0.001.csv | s13 + Kaggle CPU tohumları (RealMLP yk tohum 3/4: 0.96144/0.96143; yk+v4+te2 tohum 1: 0.96148) + açık havuzda Forge (184). s13 ile Spearman 0.999994 | 0.962170 | 0.962170 | 0.96175 (90/1086) |
+| 15 | s15_stack_own19_pub195tfm_C0.001.csv | s14 + cdeotte'nin tablo temel modeli OOF'ları (11: TabPFN-3.5, TabICL2, Mitra2, LimiX2, KumoRFM büyük/küçük, EXAONE, TabFM, Causilo, RealMLP, XGBoost; tek başına 0.957–0.9611). En büyük ağırlıklar TabFM 0.163, LimiX2 0.123. s14 ile Spearman 0.99966 | 0.962200 | 0.962200 | 0.96180 (13/1087) |
 
 ## Model runs (continued)
 
