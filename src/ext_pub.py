@@ -176,6 +176,11 @@ for c in t.columns:
     if c in o.columns:
         add("kg_" + c, o[c].to_numpy(), t[c].to_numpy(), "kagankoral")
 
+# amanatar "Forge own pairs": rebuild of busyaprime's ladder (5 folds seed 33), near-copies of bp_* (corr >= 0.9993)
+for f in sorted(glob.glob(str(d("ds__s6e10-forge-own-pairs") / "oof_forge_*.npy"))):
+    nm = os.path.basename(f)[4:-4]
+    add("fg_" + nm[6:], np.load(f), np.load(os.path.join(os.path.dirname(f), f"test_{nm}.npy")), "forge")
+
 k = pd.DataFrame(kept, columns=["name", "source", "oof_auc"])
 print(k.groupby("source").oof_auc.agg(["size", "max"]).sort_values("max", ascending=False).round(5))
 print(f"kept {len(kept)} members; rejected {len(rejected)}: {rejected}")
