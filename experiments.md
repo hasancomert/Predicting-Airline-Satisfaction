@@ -60,6 +60,7 @@ Rows are appended by `src/train.py`; the notes column says what changed. Decisio
 | 10 | s10_stack_own15seeds_pub169_C0.001.csv | s09 listesi, istifte büyük ağırlıklı kendi üyelerimize ek tohumlar: RealMLP pub + orijinal ×4, RealMLP v4te2 + orijinal ×2 (ortalama 0.96151/0.96152), hedef kodlamasız XGB ×2 (0.96109). s09 ile Spearman 0.999996. Negatif olmayan istif denendi (0.96200, reddedildi). C=0.002 → 0.962153 | 0.962150 | 0.962150 | 0.96171 |
 | 11 | s11_stack_own15_pub178_C0.001.csv | s10 kendi listesi + yenilenen açık havuz (178): kratosyan route-ID + öğretmen (2), denpugovkin sayısal anahtar CatBoost CTR (1), amanatar satır TE (1), kagankoral (5). Ablasyon: kendi −0.000088, goodpjw −0.000032, busyaprime −0.000022, denpugovkin −0.000005, kagankoral −0.000005, kratosyan +0.000001 | 0.962159 | 0.962159 | 0.96173 (16/961) |
 | 12 | s12_stack_own17_pub178_C0.001.csv | s11 + kendi iki yeni RealMLP üyemiz: yekenot görünümü + orijinal satırlar, son epoch, 3 tohum (ortalama 0.96147; ağırlık 0.102), aynı görünüm + v4 eklentileri + fold içi TE (0.96142). s11 ile Spearman 0.99994 | 0.962167 | 0.962167 | 0.96174 (14/965) |
+| 13 | s13_stack_own19_pub178_C0.001.csv | s12 + RealMLP yk+v4 tohum 1/2 (ortalama), yk+v4+sütun çifti TE (0.96150), yk 5 epoch (0.96138, ağırlık 0.100). İç içe CV değişmedi (varyantlar 0.962164–0.962167); ek tohumlar test gürültüsünü azaltmak için. s12 ile Spearman 0.99995 | 0.962167 | 0.962167 | 0.96175 (17/968) |
 
 ## Model runs (continued)
 
