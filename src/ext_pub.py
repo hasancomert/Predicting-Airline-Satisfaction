@@ -181,6 +181,12 @@ for f in sorted(glob.glob(str(d("ds__s6e10-forge-own-pairs") / "oof_forge_*.npy"
     nm = os.path.basename(f)[4:-4]
     add("fg_" + nm[6:], np.load(f), np.load(os.path.join(os.path.dirname(f), f"test_{nm}.npy")), "forge")
 
+# cdeotte "TFM OOF and test predictions": tabular foundation models (TabPFN-3.5, TabICL2, Mitra2, LimiX2,
+# KumoRFM small/large, EXAONE, TabFM, Causilo) + RealMLP / XGBoost; train/test row order
+for f in sorted(glob.glob(str(d("ds__s6e10-tfm-oof-and-test-predictions") / "oof_*.npy"))):
+    nm = os.path.basename(f)[4:-4]
+    add("cd_" + nm, np.load(f), np.load(os.path.join(os.path.dirname(f), f"test_{nm}.npy")), "cdeotte TFM")
+
 k = pd.DataFrame(kept, columns=["name", "source", "oof_auc"])
 print(k.groupby("source").oof_auc.agg(["size", "max"]).sort_values("max", ascending=False).round(5))
 print(f"kept {len(kept)} members; rejected {len(rejected)}: {rejected}")
