@@ -187,6 +187,28 @@ for f in sorted(glob.glob(str(d("ds__s6e10-tfm-oof-and-test-predictions") / "oof
     nm = os.path.basename(f)[4:-4]
     add("cd_" + nm, np.load(f), np.load(os.path.join(os.path.dirname(f), f"test_{nm}.npy")), "cdeotte TFM")
 
+# 09.10 refresh. golem's three new members, minus o_tabpfn35 (a copy of gp_tabpfn_catfd10, corr 0.99999)
+p = d("ds__s6e10-golem-oof-library")
+for k in ("p_lgbm_auxev", "q_lgbm_auxev_10fold"):
+    add("gl_" + k, np.load(p / f"oof_{k}.npy"), np.load(p / f"test_{k}.npy"), "golem")
+
+# abdullahsafwan333 "oof-dataset": goodpjw2008's recipes re-run on 15 folds (seed 42), TabPFN members with
+# 3 seeds; the TabPFN code (aviator-tabpfn) uses the out-of-fold rows only as context. tabpfn_te_cnt has no
+# public code (its AUC is in line with the larger context, not with a leak)
+p = d("ds__oof-dataset")
+for k in ("cat_v3", "xgb_v3", "tabpfn_catfd10", "tabpfn_raw", "tabpfn_te_cnt"):
+    add("ab_" + k, by_id(pd.read_csv(p / f"{k}_oof.csv"), tid, "pred"),
+        by_id(pd.read_csv(p / f"{k}_test.csv"), sid, "pred"), "abdullahsafwan333")
+
+# hermengardo single CatBoost (5 folds, 10% inner split for early stopping, original-data lookup features)
+p = d("kn__single-catboost-eda-ps6e10")
+add("hg_catboost", np.load(p / "oof_train.npy"), np.load(p / "oof_test.npy"), "hermengardo")
+
+# yekenot's public RealMLP (the recipe behind bp_realmlp and our yk view)
+p = d("kn__ps-s6-e10-realmlp-pytabkit")
+add("ye_realmlp", by_id(pd.read_csv(p / "oof_preds.csv"), tid, "satisfaction"),
+    by_id(pd.read_csv(p / "submission.csv"), sid, "satisfaction"), "yekenot")
+
 k = pd.DataFrame(kept, columns=["name", "source", "oof_auc"])
 print(k.groupby("source").oof_auc.agg(["size", "max"]).sort_values("max", ascending=False).round(5))
 print(f"kept {len(kept)} members; rejected {len(rejected)}: {rejected}")
