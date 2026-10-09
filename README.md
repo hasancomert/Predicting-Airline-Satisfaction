@@ -1,24 +1,29 @@
 # Kaggle Playground S6E10: Predicting Airline Satisfaction
 
 Hedef `satisfaction` (True/False), gönderim **olasılık**, metrik **ROC AUC**. Bu repo uçtan uca çözümü içerir:
-veri inceleme, sabit 5 katlı CV, özellik grupları, LightGBM / XGBoost / CatBoost / MLP / seyrek lojistik
-regresyon, Optuna ile ayar ve OOF üzerinde harman. Tüm deneyler `experiments.md`'de.
+veri inceleme, sabit katlı CV (5, sonra 10 kat), özellik grupları, LightGBM / XGBoost / CatBoost / MLP / seyrek lojistik
+regresyon / RealMLP / TabM / TabPFN, Optuna ile ayar, kendi üyelerimiz ve açık OOF kütüphaneleri üstünde lojistik istif.
+Tüm deneyler `experiments.md`'de, başka bir projeye aktarım notu `HANDOFF_playground-series-s6e10.md`'de.
 
-**Sonuç:** 8 model ailesinin lojistik istiflemesi, 5 katlı CV AUC **0.96160** (iç içe). Gönderilen en iyi:
-public **0.96087** (2. gönderim, CV 0.96147). Baseline LightGBM (varsayılanlar) 0.95780'di.
+**Durum (09.10.2026):** son gönderim s16, kendi 19 üyemiz + 204 açık OOF üyesinin L2 lojistik istifi (C=0.001):
+iç içe CV **0.962237**, public LB **0.96183** (21/1245). Kendi en iyi tek modellerimiz (10 kat): RealMLP + te2 +
+orijinal satırlar 0.96148–0.96151, XGBoost FS3 0.96148. Baseline LightGBM (varsayılanlar) 0.95780. Private LB:
+yarışma 31.10.2026'da bitiyor.
 
-Ne işe yaradı (büyükten küçüğe):
+Ne işe yaradı (büyükten küçüğe, ölçüldüğü bağlamla):
 
-1. Değerlerin kimliğini kat içi hedef kodlamayla vermek (`te1` +0.0012). Özellikle Flight Distance bir rota
-   kimliği gibi davranıyor; mesafe × diğer kolon kodlamaları (+0.0002) ve kolon ikilileri (`te2`, +0.0003).
-2. Orijinal veriyi her eğitim katına ek satır olarak koymak (+0.0002–0.0003).
-3. Ayar ve düşük öğrenme oranı: LightGBM 0.96089 (std, lr 0.1) → 0.96130 (t1, lr 0.03).
-4. Farklı ailelerden harman: tek en iyi model 0.96130 → 0.96160. En değerli üyeler hedef kodlamasız LightGBM
-   ve 7 tohumlu ham girdili MLP.
+1. Değerlerin kimliğini kat içi hedef kodlamayla vermek (`te1` +0.0012, LightGBM). Flight Distance bir rota kimliği
+   gibi davranıyor; mesafe × diğer kolon kodlamaları (+0.0002) ve kolon ikilileri (`te2`, +0.0003).
+2. LightGBM varsayılanlarından 63 yaprak + erken durdurmaya (+0.0010); Optuna ayarı ve lr 0.03 (+0.0004).
+3. Orijinal veriyi her eğitim katına `is_orig` bayrağıyla ek satır olarak koymak (+0.0003; RealMLP'de +0.00016).
+4. Farklı ailelerden harman: tek en iyi model 0.96130 → 0.96160 (5 kat); 10 kat ile 0.96181.
+5. Açık OOF kütüphanelerini kendi üyelerimizle birlikte güçlü L2 lojistik istifte kullanmak: 0.96184 → 0.96213;
+   sonra tablo temel modelleri (TFM, +0.00003) ve 15 katlı TabPFN yeniden koşuları (+0.00004) ile 0.962237.
 
-İşe yaramayanlar: elle türetilmiş gecikme / puan özetleri, puan grupları, 0 bayrakları, orijinal veride değer
-başına oranlar (TE varken), CatBoost'ta her kolonu kategorik vermek, orijinal satır ağırlığını değiştirmek, TE
-girdili MLP'yi harmana katmak, üçlü hedef kodlamalar (gürültü sınırında).
+İşe yaramayanlar: elle türetilmiş gecikme / puan özetleri, puan grupları, 0 bayrakları, orijinal veride değer başına
+oranlar (TE varken), orijinal satır ağırlığını değiştirmek, üçlü hedef kodlamalar, sayısal basamaklar, rota
+ortalamasından sapmalar, etiketsiz puan beklentileri; istifte probit girdisi, negatif olmayan ağırlıklar, GBDT
+meta-öğrenici. Ayrıntılar ve sayılar aşağıda ve `experiments.md`'de.
 
 ## Veri
 
