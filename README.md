@@ -290,7 +290,8 @@ Gözlemler:
 | 12 | `s12_stack_own17_pub178_C0.001.csv` | s11 + kendi RealMLP'miz yekenot görünümünde, orijinal satırlarla (3 tohum, son epoch) ve v4 eklentili varyantı | 0.96217 | 0.96217 | 0.96174 |
 | 13 | `s13_stack_own19_pub178_C0.001.csv` | s12 + yekenot ailesinde ek RealMLP tohum/varyantları (sütun çifti TE'li sürüm 0.96150) | 0.96217 | 0.96217 | 0.96175 |
 | 14 | `s14_stack_own19seeds_pub184_C0.001.csv` | s13 + Kaggle CPU'da üretilen ek RealMLP tohumları (GPU kotası harcamadan) | 0.96217 | 0.96217 | 0.96175 |
-| 15 | `s15_stack_own19_pub195tfm_C0.001.csv` | s14 + Chris Deotte'nin tablo temel modeli (TFM) OOF'ları: TabFM, LimiX2, TabICL2, Mitra2, KumoRFM, EXAONE, Causilo... | 0.96220 | 0.96220 | **0.96180** |
+| 15 | `s15_stack_own19_pub195tfm_C0.001.csv` | s14 + Chris Deotte'nin tablo temel modeli (TFM) OOF'ları: TabFM, LimiX2, TabICL2, Mitra2, KumoRFM, EXAONE, Causilo... | 0.96220 | 0.96220 | 0.96180 |
+| 16 | `s16_stack_own19_pub204_C0.001.csv` | s15 + 09.10 açık havuz yenilemesi (15 katlı TabPFN/XGB/CatBoost yeniden koşuları, golem, sachith7, hermengardo, yekenot) | 0.96224 | 0.96224 | **0.96183** |
 
 Public LB CV'nin yaklaşık 0.0006 altında. 1 → 2 adımında CV +0.00033 iken public +0.00028 arttı. Public kısım
 test'in küçük bir parçası; 140 bin satırlık kat std'si 0.0006 olduğundan, public skorun std'si 0.001'e yakın.

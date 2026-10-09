@@ -1,0 +1,4 @@
+224 members (19 own, 205 public)
+nested CV, all members: 0.962240
+largest |weights|: [('pub_cd_tabfm', 0.161), ('pub_ab_tabpfn_catfd10', 0.146), ('pub_cd_limix2', 0.118), ('own:realmlp_yk_e5_ens8_orig_last_k10', 0.086), ('pub_cd_causilo', -0.07), ('own:xgb_base+cnt+inter+fdprof_lr0.03_t1_', 0.064), ('pub_fg_realmlp', 0.058), ('pub_am_lgbm_champion', -0.057), ('pub_dp_catboost_numeric_ctr', 0.056), ('pub_bp_realmlp', 0.055), ('pub_gl_q_lgbm_auxev_10fold', 0.054), ('pub_gp_realmlp_pub_s1', -0.052)]
+non-zero weights: 224 / 224, negative: 96
