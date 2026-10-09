@@ -18,7 +18,8 @@ Ne işe yaradı (büyükten küçüğe, ölçüldüğü bağlamla):
 3. Orijinal veriyi her eğitim katına `is_orig` bayrağıyla ek satır olarak koymak (+0.0003; RealMLP'de +0.00016).
 4. Farklı ailelerden harman: tek en iyi model 0.96130 → 0.96160 (5 kat); 10 kat ile 0.96181.
 5. Açık OOF kütüphanelerini kendi üyelerimizle birlikte güçlü L2 lojistik istifte kullanmak: 0.96184 → 0.96213;
-   sonra tablo temel modelleri (TFM, +0.00003) ve 15 katlı TabPFN yeniden koşuları (+0.00004) ile 0.962237.
+   sonra tablo temel modelleri (TFM, +0.00003) ve 09.10 havuz yenilemesi (+0.00004; en büyük ağırlığı 15 katlı TabPFN
+   yeniden koşusu aldı) ile 0.962237.
 
 İşe yaramayanlar: elle türetilmiş gecikme / puan özetleri, puan grupları, 0 bayrakları, orijinal veride değer başına
 oranlar (TE varken), orijinal satır ağırlığını değiştirmek, üçlü hedef kodlamalar, sayısal basamaklar, rota
