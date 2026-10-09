@@ -36,6 +36,10 @@ def add(name, o, t, src):
     if not (np.isfinite(o).all() and np.isfinite(t).all()):
         rejected.append((name, "non-finite"))
         return
+    if min(o.min(), t.min()) < 0 or max(o.max(), t.max()) > 1:
+        # stored as logits / scores, not probabilities (arhancanli12's *_5f): sigmoid, so that the stacker's
+        # logit gives the values back instead of clipping them to +-13.8
+        o, t = 1 / (1 + np.exp(-o)), 1 / (1 + np.exp(-t))
     auc = roc_auc_score(y, o)
     if not 0.90 < auc < 0.9625:
         rejected.append((name, f"OOF AUC {auc:.5f}"))
