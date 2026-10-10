@@ -215,3 +215,4 @@ Rows are appended by `src/train.py`; the notes column says what changed. Decisio
 | realmlp_ykaux_e3_ens8_orig_last_k10 | 10-fold: RealMLP yk view + aux rating expectations/residuals + orig, last epoch (Kaggle CPU) | 0.96147 ± 0.00074 | 0.96146 | - | 11759s | |
 | realmlp_ykaux_e3_ens8_orig_last_s2_k10 | 10-fold: RealMLP yk view + aux + orig, last epoch, seed 2 (Kaggle CPU) | 0.96148 ± 0.00071 | 0.96147 | - | 9800s | |
 | realmlp_ykaux+aux2_e3_ens8_orig_last_k10 | 10-fold: RealMLP yk view + aux + aux2 (categorical/numeric expectations) + orig, last epoch (Kaggle CPU) | 0.96146 ± 0.00068 | 0.96145 | - | 12794s | |
+| realmlp_pubaux_e6_ens8_orig_last_k10 | 10-fold: RealMLP pub view + aux rating expectations/residuals + orig, e6, last epoch (Kaggle CPU) | 0.96134 ± 0.00067 | 0.96133 | - | 18986s | |
