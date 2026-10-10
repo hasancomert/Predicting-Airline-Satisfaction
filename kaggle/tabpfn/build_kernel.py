@@ -13,7 +13,8 @@ abdullahsafwan333's 15-fold TabPFN members). Units (variant, seed, fold) run one
 
 Usage: python kaggle/tabpfn/build_kernel.py push <slug> [tag] [limit_hours] [n_seeds]          (te4op, 5 folds)
        python kaggle/tabpfn/build_kernel.py pushx <slug> <tag> <limit_hours> <n_seeds> <K> <only|all> <variants>
-         variants: comma list of name:view:orig, e.g. "c10:catfd10:0,c10og:catfd10:1"; only: e.g. "0" or "0,1,2"
+         variants: comma list of name:view:orig[:drop], e.g. "c10:catfd10:0,c10og:catfd10:1:Gender|Food and drink";
+         only: e.g. "0" or "0,1,2". Memory on a 16 GB T4: ~13 M context cells (rows x features) fit, 653 k x 22 does not
        python kaggle/gpu_kernel.py fetch <slug>     (oof/preds when complete; units stay in the build output dir)
 The worker and the memory-lean KV-cache patch are adapted from hemingweb's public notebook
 "S6E10 | EXP01 TabPFN-3.5 full context".
@@ -106,7 +107,8 @@ for v in VARIANTS:
                "Food and drink", "Online boarding", "Seat comfort", "Inflight entertainment", "On-board service",
                "Leg room service", "Baggage handling", "Checkin service", "Cleanliness"]
         CAT4 = ["Gender", "Customer Type", "Type of Travel", "Class"]
-        FE = NUM4 + RAT + CAT4                       # the column order is part of the recipe
+        FE = [c for c in NUM4 + RAT + CAT4 if c not in v.get("drop", [])]   # recipe order, minus dropped columns
+        CAT4 = [c for c in CAT4 if c in FE]
         parts = [train[FE], test[FE]] + ([orig[FE]] if v["orig"] else [])
         full = pd.concat(parts, ignore_index=True)
         tt = pd.concat([train[FE], test[FE]], ignore_index=True)
@@ -208,6 +210,9 @@ if __name__ == "__main__":
     elif sys.argv[1] == "pushx":
         slug, tag, limit_h, n_seeds, k, only, vs = sys.argv[2:9]
         only = None if only == "all" else [int(f) for f in only.split(",")]
-        variants = [dict(zip(("name", "view", "orig"), (a, b, int(c))))
-                    for a, b, c in (x.split(":") for x in vs.split(","))]
+        variants = []
+        for x in vs.split(","):                      # name:view:orig[:col|col|...] (columns to drop)
+            f = x.split(":")
+            variants.append({"name": f[0], "view": f[1], "orig": int(f[2]),
+                             "drop": f[3].split("|") if len(f) > 3 and f[3] else []})
         push(slug, tag, limit_h, n_seeds, int(k), only, variants)
