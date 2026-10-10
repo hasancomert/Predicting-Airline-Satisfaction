@@ -12,7 +12,8 @@ Folds: StratifiedKFold(K, shuffle=True, random_state=42) (K=5: the public librar
 abdullahsafwan333's 15-fold TabPFN members). Units (variant, seed, fold) run one per GPU.
 
 Usage: python kaggle/tabpfn/build_kernel.py push <slug> [tag] [limit_hours] [n_seeds]          (te4op, 5 folds)
-       python kaggle/tabpfn/build_kernel.py pushx <slug> <tag> <limit_hours> <n_seeds> <K> <only|all> <variants>
+       python kaggle/tabpfn/build_kernel.py pushx <slug> <tag> <limit_hours> <n_seeds|@s1,s2> <K> <only|all> <variants>
+         n_seeds: seeds 0..n-1; @1,2: exactly these seeds (extra seeds for a variant already run with seed 0)
          variants: comma list of name:view:orig[:drop], e.g. "c10:catfd10:0,c10og:catfd10:1:Gender|Food and drink";
          only: e.g. "0" or "0,1,2". Memory on a 16 GB T4 is set by the context rows (lean_patch v1: 560 k fit,
          653 k OOM in the decoder keys, 783 k OOM in the ICL attention; v2: 653 k x 22 peak 10.5 GB, 116 min per
@@ -136,7 +137,7 @@ for v in VARIANTS:
 
 # ---------------- scheduler: (seed, fold) units, one GPU each ----------------
 HARD = T0 + LIMIT_H * 3600
-queue = collections.deque((v["name"], s, f) for s in range(__NSEEDS__) for f in ONLY for v in VARIANTS)
+queue = collections.deque((v["name"], s, f) for s in __SEEDS__ for f in ONLY for v in VARIANTS)
 lock = threading.Lock()
 durations = []
 def gpu_loop(g):
@@ -184,6 +185,12 @@ for v in VARIANTS:
 '''
 
 
+def seeds_of(n_seeds):
+    """'3' -> [0, 1, 2]; '@1,2' -> [1, 2]."""
+    n_seeds = str(n_seeds)
+    return [int(x) for x in n_seeds[1:].split(",")] if n_seeds.startswith("@") else list(range(int(n_seeds)))
+
+
 def push(slug, tag, limit_h, n_seeds, k=5, only=None, variants=None):
     variants = variants or [{"name": "te4op", "view": "te4op", "orig": 0}]
     d = BUILD / slug
@@ -194,7 +201,7 @@ def push(slug, tag, limit_h, n_seeds, k=5, only=None, variants=None):
     extra = {p.name: enc(p) for p in (HERE / "worker.py", HERE / "lean_patch.py")}
     code = (RUN.replace("__TAG__", repr(tag)).replace("__LIMIT__", repr(float(limit_h)))
             .replace("__SRC__", repr(src)).replace("__EXTRA__", repr(extra))
-            .replace("__NSEEDS__", str(int(n_seeds))).replace("__K__", str(int(k)))
+            .replace("__SEEDS__", repr(seeds_of(n_seeds))).replace("__K__", str(int(k)))
             .replace("__ONLY__", repr(only)).replace("__VARIANTS__", repr(variants)))
     (d / "run.py").write_text(code)
     meta = {"id": f"{USER}/{slug}", "title": slug, "code_file": "run.py", "language": "python",
