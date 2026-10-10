@@ -213,6 +213,20 @@ p = d("kn__ps-s6-e10-realmlp-pytabkit")
 add("ye_realmlp", by_id(pd.read_csv(p / "oof_preds.csv"), tid, "satisfaction"),
     by_id(pd.read_csv(p / "submission.csv"), sid, "satisfaction"), "yekenot")
 
+# 10.10: koumeimaki "s6e10-route-tfm-nn-oof": 7 members on the shared 5-fold split (fold column checked
+# below), train/test row order: TabPFN-3.5 catfd10 (full context, 1 estimator), TabICL v2 (250k context),
+# RealMLP (yekenot settings + aux columns), TabM, LightGBM / XGBoost / CatBoost on 109-144 engineered columns
+p = d("ds__s6e10-route-tfm-nn-oof")
+kf = pd.read_csv(p / "train_ids_folds.csv")
+assert np.array_equal(kf["id"].to_numpy(), tid) and np.array_equal(pd.read_csv(p / "test_ids.csv")["id"].to_numpy(), sid)
+from common import folds  # noqa: E402
+f5 = np.full(len(y), -1)
+for i, (_, va) in enumerate(folds(y, 5)):
+    f5[va] = i
+assert np.array_equal(kf["fold"].to_numpy(), f5), "koumeimaki folds differ from StratifiedKFold(5, True, 42)"
+for k in pd.read_csv(p / "members.csv")["tag"]:
+    add("km_" + k, np.load(p / f"oof_{k}.npy"), np.load(p / f"test_{k}.npy"), "koumeimaki")
+
 k = pd.DataFrame(kept, columns=["name", "source", "oof_auc"])
 print(k.groupby("source").oof_auc.agg(["size", "max"]).sort_values("max", ascending=False).round(5))
 print(f"kept {len(kept)} members; rejected {len(rejected)}: {rejected}")

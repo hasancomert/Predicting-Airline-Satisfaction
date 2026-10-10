@@ -5,8 +5,8 @@ veri inceleme, sabit katlı CV (5, sonra 10 kat), özellik grupları, LightGBM /
 regresyon / RealMLP / TabM / TabPFN, Optuna ile ayar, kendi üyelerimiz ve açık OOF kütüphaneleri üstünde lojistik istif.
 Tüm deneyler `experiments.md`'de, başka bir projeye aktarım notu `HANDOFF_playground-series-s6e10.md`'de.
 
-**Durum (09.10.2026):** son gönderim s16, kendi 19 üyemiz + 204 açık OOF üyesinin L2 lojistik istifi (C=0.001):
-iç içe CV **0.962237**, public LB **0.96183** (21/1245). Kendi en iyi tek modellerimiz (10 kat): RealMLP + te2 +
+**Durum (10.10.2026):** son gönderim s17, kendi 19 üyemiz + 211 açık OOF üyesinin L2 lojistik istifi (C=0.001):
+iç içe CV **0.962247**, public LB **0.96184** (18/1371). Kendi en iyi tek modellerimiz (10 kat): RealMLP + te2 +
 orijinal satırlar 0.96148–0.96151, XGBoost FS3 0.96148. Baseline LightGBM (varsayılanlar) 0.95780. Private LB:
 yarışma 31.10.2026'da bitiyor.
 
@@ -18,8 +18,8 @@ Ne işe yaradı (büyükten küçüğe, ölçüldüğü bağlamla):
 3. Orijinal veriyi her eğitim katına `is_orig` bayrağıyla ek satır olarak koymak (+0.0003; RealMLP'de +0.00016).
 4. Farklı ailelerden harman: tek en iyi model 0.96130 → 0.96160 (5 kat); 10 kat ile 0.96181.
 5. Açık OOF kütüphanelerini kendi üyelerimizle birlikte güçlü L2 lojistik istifte kullanmak: 0.96184 → 0.96213;
-   sonra tablo temel modelleri (TFM, +0.00003) ve 09.10 havuz yenilemesi (+0.00004; en büyük ağırlığı 15 katlı TabPFN
-   yeniden koşusu aldı) ile 0.962237.
+   sonra tablo temel modelleri (TFM, +0.00003), 09.10 havuz yenilemesi (+0.00004; en büyük ağırlığı 15 katlı TabPFN
+   yeniden koşusu aldı) ve 10.10'da koumeimaki'nin 7 üyesi (+0.00001) ile 0.962247.
 
 İşe yaramayanlar: elle türetilmiş gecikme / puan özetleri, puan grupları, 0 bayrakları, orijinal veride değer başına
 oranlar (TE varken), orijinal satır ağırlığını değiştirmek, üçlü hedef kodlamalar, sayısal basamaklar, rota
@@ -297,7 +297,8 @@ Gözlemler:
 | 13 | `s13_stack_own19_pub178_C0.001.csv` | s12 + yekenot ailesinde ek RealMLP tohum/varyantları (sütun çifti TE'li sürüm 0.96150) | 0.96217 | 0.96217 | 0.96175 |
 | 14 | `s14_stack_own19seeds_pub184_C0.001.csv` | s13 + Kaggle CPU'da üretilen ek RealMLP tohumları (GPU kotası harcamadan) | 0.96217 | 0.96217 | 0.96175 |
 | 15 | `s15_stack_own19_pub195tfm_C0.001.csv` | s14 + Chris Deotte'nin tablo temel modeli (TFM) OOF'ları: TabFM, LimiX2, TabICL2, Mitra2, KumoRFM, EXAONE, Causilo... | 0.96220 | 0.96220 | 0.96180 |
-| 16 | `s16_stack_own19_pub204_C0.001.csv` | s15 + 09.10 açık havuz yenilemesi (15 katlı TabPFN/XGB/CatBoost yeniden koşuları, golem, sachith7, hermengardo, yekenot) | 0.96224 | 0.96224 | **0.96183** |
+| 16 | `s16_stack_own19_pub204_C0.001.csv` | s15 + 09.10 açık havuz yenilemesi (15 katlı TabPFN/XGB/CatBoost yeniden koşuları, golem, sachith7, hermengardo, yekenot) | 0.96224 | 0.96224 | 0.96183 |
+| 17 | `s17_stack_own19_pub211_C0.001.csv` | s16 + koumeimaki'nin 7 OOF üyesi (TabPFN, TabICL, RealMLP, TabM, GBDT'ler) | 0.96225 | 0.96225 | **0.96184** |
 
 Public LB CV'nin yaklaşık 0.0006 altında. 1 → 2 adımında CV +0.00033 iken public +0.00028 arttı. Public kısım
 test'in küçük bir parçası; 140 bin satırlık kat std'si 0.0006 olduğundan, public skorun std'si 0.001'e yakın.
