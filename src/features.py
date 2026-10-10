@@ -183,6 +183,8 @@ def build(groups, train, test, orig=None):
 
     if "aux" in groups:
         F = pd.concat([F, aux_block(A)], axis=1)
+    if "aux2" in groups:
+        F = pd.concat([F, aux2_block(A)], axis=1)
     if "digit" in groups:
         dig = {}
         for c in ["Age", "Flight Distance", DEP, ARR]:
@@ -259,4 +261,62 @@ def aux_block(A):
     for j, r in enumerate(RATINGS):
         out[f"aux_ev_{clean(r)}"] = E[:, j]
         out[f"aux_res_{clean(r)}"] = A[r].astype(float).to_numpy() - E[:, j]
+    return pd.DataFrame(out, index=A.index)
+
+
+def aux2_block(A):
+    """Label-free expectations of the non-rating columns (aux covers the 13 ratings): the probabilities of
+    Gender / Customer Type / Type of Travel / Class and the expected Age, log Flight Distance and log delays,
+    each cross-predicted (KFold 5 over all given rows) from the other 21 columns, plus the residual
+    (indicator - probability, value - expectation; -log p(actual class) for Class)."""
+    from pathlib import Path
+    import lightgbm as lgb
+    from sklearn.model_selection import KFold
+    path = Path(__file__).resolve().parent.parent / "cache" / f"aux2_{len(A)}.npz"
+    X = pd.DataFrame({c: (pd.Categorical(A[c]) if c in CATS else A[c].astype(float)) for c in COLS})
+    X.columns = [clean(c) for c in X.columns]
+    targets = {}
+    for c in ["Gender", "Customer Type", "Type of Travel", "Class"]:
+        targets[c] = ("cls", pd.Categorical(A[c]).codes.astype(np.int64))
+    targets["Age"] = ("reg", A["Age"].astype(float).to_numpy())
+    for c in ["Flight Distance", DEP, ARR]:
+        targets[c] = ("reg", np.log1p(A[c].astype(float).to_numpy()))
+    if path.exists():
+        E = dict(np.load(path))
+    else:
+        E = {}
+        params = dict(n_estimators=400, learning_rate=0.08, num_leaves=127, min_child_samples=50, subsample=0.8,
+                      subsample_freq=1, colsample_bytree=0.8, verbose=-1, n_jobs=3)
+        for j, (c, (kind, t)) in enumerate(targets.items()):
+            cols = [x for x in X.columns if x != clean(c)]
+            ok = np.isfinite(t) if kind == "reg" else np.ones(len(t), bool)
+            k = int(t.max()) + 1 if kind == "cls" else 1
+            out = np.zeros((len(A), k), dtype=np.float32)
+            for a, b in KFold(5, shuffle=True, random_state=0).split(X):
+                a = a[ok[a]]
+                if kind == "cls":
+                    m = lgb.LGBMClassifier(**params, random_state=j)
+                    m.fit(X.iloc[a][cols], t[a])
+                    out[b] = m.predict_proba(X.iloc[b][cols])
+                else:
+                    m = lgb.LGBMRegressor(**params, random_state=j)
+                    m.fit(X.iloc[a][cols], t[a])
+                    out[b, 0] = m.predict(X.iloc[b][cols])
+            E[clean(c)] = out
+            print(f"  aux2: {c} done", flush=True)
+        path.parent.mkdir(exist_ok=True)
+        np.savez(path, **E)
+    out = {}
+    for c, (kind, t) in targets.items():
+        P = E[clean(c)]
+        if kind == "cls" and P.shape[1] == 2:
+            out[f"aux2_p_{clean(c)}"] = P[:, 1]
+            out[f"aux2_res_{clean(c)}"] = (t == 1).astype(np.float32) - P[:, 1]
+        elif kind == "cls":
+            for i in range(P.shape[1]):
+                out[f"aux2_p{i}_{clean(c)}"] = P[:, i]
+            out[f"aux2_surp_{clean(c)}"] = -np.log(np.clip(P[np.arange(len(t)), t], 1e-6, 1))
+        else:
+            out[f"aux2_ev_{clean(c)}"] = P[:, 0]
+            out[f"aux2_res_{clean(c)}"] = np.nan_to_num(t - P[:, 0], nan=0.0)
     return pd.DataFrame(out, index=A.index)

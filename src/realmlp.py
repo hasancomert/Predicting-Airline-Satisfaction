@@ -10,6 +10,9 @@ Usage: python src/realmlp.py [feats=pub|v4] [epochs=3] [n_ens=8] [seed=42] [te=t
        + in-fold target encodings (te=...; same cache as train.py, original rows not used)
   v5   v4 + logit of a RealMLP trained on the original data only (orm)
   yk   yekenot's public view: twins + counts + 3 combinations (TE in fold), his schedule settings
+  plus=v4|aux|aux2|v4+aux..  extras on top of the view: v4 = route profile, counts, opred; aux = label-free
+       rating expectations (each rating cross-predicted from the other 20 columns) and their residuals;
+       aux2 = the same for the categoricals (probabilities), Age, Flight Distance and the delays
   model=tabm  TabM (pytabkit TabM_D) instead of RealMLP; epochs = max epochs, patience=, bs=,
               twins=0 drops the categorical twins (TE columns already carry value identity)
 Per-fold checkpoints in cache/partial, so a restarted run resumes.
@@ -25,7 +28,7 @@ import torch
 from sklearn.metrics import roc_auc_score
 
 from common import CATS, COLS, NUMS, ROOT, folds, load, save
-from features import build, te_keys
+from features import aux2_block, aux_block, build, te_keys
 from te_cache import te_block
 
 warnings.filterwarnings("ignore")
@@ -60,7 +63,8 @@ PATIENCE = int(opts.get("patience", 4))    # TabM early-stopping patience (epoch
 BEST = int(opts.get("best", 1))
 
 ORIG = int(opts.get("orig", 0))  # 1: original rows added to every training fold (+ is_orig flag)
-need_orig = FEATS in ("v4", "v5") or ORIG or opts.get("plus", "") == "v4"
+PLUS = opts.get("plus", "")  # plus=v4: the v4 extras (route profile, counts, opred); plus=aux; plus=v4+aux
+need_orig = FEATS in ("v4", "v5") or ORIG or "v4" in PLUS.split("+")
 if need_orig:
     train, test, y, orig, yo = load(orig=True)
 else:
@@ -113,8 +117,7 @@ X, cat_cols = twin_frame(pd.concat([full, orig[COLS]], ignore_index=True) if ORI
 if not TWINS:
     X = X.drop(columns=[c for c in cat_cols if c.endswith("_cat_")])
     cat_cols = [c for c in cat_cols if not c.endswith("_cat_")]
-PLUS = opts.get("plus", "")  # plus=v4: the v4 extras (route profile, counts, opred) on top of feats=yk
-if FEATS in ("v4", "v5") or PLUS == "v4":
+if FEATS in ("v4", "v5") or "v4" in PLUS.split("+"):
     groups = ["base", "fdprof", "cnt", "opred"]
     F = build(groups, train, test, orig).iloc[:n + m + n_o]
     extra = [c for c in F.columns
@@ -123,6 +126,13 @@ if FEATS in ("v4", "v5") or PLUS == "v4":
         v = logit(F[c]) if c == "opred" else F[c].to_numpy(np.float32)
         # 2052 original rows sit on routes absent from train+test (no route profile): column mean
         X[c] = np.where(np.isnan(v), np.nanmean(v[:n + m]), v).astype(np.float32)
+for g, fn in (("aux", aux_block), ("aux2", aux2_block)):
+    if g in PLUS.split("+"):
+        # aux: 13 rating expectations + residuals; aux2: the other columns' expectations + residuals;
+        # LightGBM cross-predicted over train+test(+orig) rows (label-free)
+        AX = fn(pd.concat([full, orig[COLS]], ignore_index=True) if ORIG else full)
+        for c in AX.columns:
+            X[c] = AX[c].to_numpy(np.float32)
 if FEATS == "v5":
     X["orm"] = logit(np.r_[orig_realmlp(), np.full(n_o, 0.5)])  # (orig rows: no orm, neutral)
 if ORIG:
