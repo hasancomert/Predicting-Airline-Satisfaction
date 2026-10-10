@@ -212,3 +212,6 @@ Rows are appended by `src/train.py`; the notes column says what changed. Decisio
 | realmlp_yk_e3_ens8_orig_last_s4_k10 | 10-fold: RealMLP yekenot view + orig, last epoch, seed 4 (Kaggle CPU) | 0.96144 ± 0.00072 | 0.96143 | - | 8997s | |
 | realmlp_ykv4_e3_ens8_te1+tefd+te2_orig_last_s2_k10 | 10-fold: RealMLP yk + v4 extras + TE te1/tefd/te2 + orig, last epoch, seed 2 (Kaggle CPU) | 0.96151 ± 0.00061 | 0.96150 | - | 38447s | |
 | realmlp_ykaux_e3_ens8_orig_last_s1_k10 | 10-fold: RealMLP yk view + aux rating expectations/residuals + orig, last epoch, seed 1 (local CPU) | 0.96150 ± 0.00071 | 0.96149 | - | 4937s | |
+| realmlp_ykaux_e3_ens8_orig_last_k10 | 10-fold: RealMLP yk view + aux rating expectations/residuals + orig, last epoch (Kaggle CPU) | 0.96147 ± 0.00074 | 0.96146 | - | 11759s | |
+| realmlp_ykaux_e3_ens8_orig_last_s2_k10 | 10-fold: RealMLP yk view + aux + orig, last epoch, seed 2 (Kaggle CPU) | 0.96148 ± 0.00071 | 0.96147 | - | 9800s | |
+| realmlp_ykaux+aux2_e3_ens8_orig_last_k10 | 10-fold: RealMLP yk view + aux + aux2 (categorical/numeric expectations) + orig, last epoch (Kaggle CPU) | 0.96146 ± 0.00068 | 0.96145 | - | 12794s | |
