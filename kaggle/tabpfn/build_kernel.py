@@ -14,7 +14,8 @@ abdullahsafwan333's 15-fold TabPFN members). Units (variant, seed, fold) run one
 Usage: python kaggle/tabpfn/build_kernel.py push <slug> [tag] [limit_hours] [n_seeds]          (te4op, 5 folds)
        python kaggle/tabpfn/build_kernel.py pushx <slug> <tag> <limit_hours> <n_seeds> <K> <only|all> <variants>
          variants: comma list of name:view:orig[:drop], e.g. "c10:catfd10:0,c10og:catfd10:1:Gender|Food and drink";
-         only: e.g. "0" or "0,1,2". Memory on a 16 GB T4: ~13 M context cells (rows x features) fit, 653 k x 22 does not
+         only: e.g. "0" or "0,1,2". Memory on a 16 GB T4 is set by the context rows (lean_patch v1: 560 k fit,
+         653 k OOM in the decoder keys, 783 k OOM in the ICL attention; v2 removes both peaks)
        python kaggle/gpu_kernel.py fetch <slug>     (oof/preds when complete; units stay in the build output dir)
 The worker and the memory-lean KV-cache patch are adapted from hemingweb's public notebook
 "S6E10 | EXP01 TabPFN-3.5 full context".
@@ -149,7 +150,7 @@ def gpu_loop(g):
         say(f"gpu{g}: START {vn} fold {f} seed {s}")
         t = time.time()
         env = dict(os.environ, CUDA_VISIBLE_DEVICES=g, PYTORCH_CUDA_ALLOC_CONF="expandable_segments:True",
-                   PYTHONPATH=work)
+                   PYTHONPATH=work, LEAN_LOG="1")
         os.makedirs(f"{out}/units/{vn}", exist_ok=True)
         r = subprocess.run([sys.executable, f"{work}/worker.py", "--fold", str(f), "--seed", str(s),
                             "--work", f"{work}/{vn}", "--out", f"{out}/units/{vn}", "--ckpt", CKPT,
