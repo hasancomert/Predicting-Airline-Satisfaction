@@ -15,7 +15,9 @@ Usage: python kaggle/tabpfn/build_kernel.py push <slug> [tag] [limit_hours] [n_s
        python kaggle/tabpfn/build_kernel.py pushx <slug> <tag> <limit_hours> <n_seeds> <K> <only|all> <variants>
          variants: comma list of name:view:orig[:drop], e.g. "c10:catfd10:0,c10og:catfd10:1:Gender|Food and drink";
          only: e.g. "0" or "0,1,2". Memory on a 16 GB T4 is set by the context rows (lean_patch v1: 560 k fit,
-         653 k OOM in the decoder keys, 783 k OOM in the ICL attention; v2 removes both peaks)
+         653 k OOM in the decoder keys, 783 k OOM in the ICL attention; v2: 653 k x 22 peak 10.5 GB, 116 min per
+         unit; 783 k x 23 peak 12.4 GB, 154 min per unit)
+       python kaggle/tabpfn/aggregate.py <variant> <K> <tag> <slug> [<slug> ...]   (a run split over kernels)
        python kaggle/gpu_kernel.py fetch <slug>     (oof/preds when complete; units stay in the build output dir)
 The worker and the memory-lean KV-cache patch are adapted from hemingweb's public notebook
 "S6E10 | EXP01 TabPFN-3.5 full context".
