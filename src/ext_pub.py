@@ -227,6 +227,17 @@ assert np.array_equal(kf["fold"].to_numpy(), f5), "koumeimaki folds differ from 
 for k in pd.read_csv(p / "members.csv")["tag"]:
     add("km_" + k, np.load(p / f"oof_{k}.npy"), np.load(p / f"test_{k}.npy"), "koumeimaki")
 
+# 11.10 refresh. goodpjw2008 "extra members": 17 unpublished members of the same series (outer folds
+# StratifiedKFold(5, True, 42), _k10 = 10 folds; trees early-stop on the scored fold, as in their Part 8 members)
+p = d("ds__s6e10-goodpjw2008-extra-members-oof")
+for k in pd.read_csv(p / "members.csv")["member"]:
+    add("gx_" + k, np.load(p / f"oof_{k}.npy"), np.load(p / f"test_{k}.npy"), "goodpjw extra")
+
+# dmitriykolmikov CatBoost, every column categorical + frequencies + original-data means/teacher, original rows
+# in each training fold, StratifiedKFold(5, True, 42), early stopping on the validation fold
+p = d("ds__s6e10-catboost-all-categorical-oof-and-test")
+add("dk_cb_cat", np.load(p / "oof_cb_cat.npy"), np.load(p / "test_cb_cat.npy"), "dmitriykolmikov")
+
 k = pd.DataFrame(kept, columns=["name", "source", "oof_auc"])
 print(k.groupby("source").oof_auc.agg(["size", "max"]).sort_values("max", ascending=False).round(5))
 print(f"kept {len(kept)} members; rejected {len(rejected)}: {rejected}")
