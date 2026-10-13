@@ -2,13 +2,16 @@
 
 Usage: python src/stack.py <out_name|-> own=<file with one own group per line> pub=<all|none|file>
                            [exclude=prefix1,prefix2] [C=1.0] [ablate=1] [tf=logit|probit] [nonneg=1]
-                           [clip=<max |logit|>] [scale=1] [mseed=7]
+                           [clip=<max |logit|>] [scale=1] [mseed=7] [fam=tabpfn:3,tfm:1.5]
   own     each line is one member: tags joined by ',' are averaged (seeds); "ext_..." tags work too
   pub     all: every ext/oof/pub_*.npy (minus exclude prefixes); none; or a file of names
   ablate  leave-one-source-out deltas (source = own / prefix of the public name)
   clip    clip member logits to [-clip, clip] (some public members have logit std ~12)
   scale   standardise every member column (OOF mean / std, same transform on test) before the
           penalised fit, so the L2 penalty treats members alike
+  fam     family-wise L2 (goodpjw2008's 'regularize families, not members', as in ewtherka's notebook): member
+          logits of a family are multiplied by its factor s, which divides their L2 penalty by s^2. Families:
+          tabpfn (TabPFN members), tfm (cdeotte's TFM set, TabICL, TabM), the rest 1
   mseed   seed of the meta folds (default 7; other seeds show the noise of a nested-CV difference)
   nonneg  member weights constrained to >= 0 (same penalised objective as sklearn, L-BFGS-B); a stack
           that cannot lean on small differences between near-duplicate members
@@ -82,6 +85,21 @@ for t in pubs:
         continue
     add(t, [t], t[4:].split("_")[0])
 Z, ZT = np.column_stack(Z), np.column_stack(ZT)
+FAM = dict(kv.split(":") for kv in opts["fam"].split(",")) if opts.get("fam") else {}
+
+
+def family(n):
+    if "tabpfn" in n or n.startswith("pub_pfn_"):
+        return "tabpfn"
+    if n.startswith("pub_cd_") or "tabicl" in n or "tabm" in n:
+        return "tfm"
+    return "other"
+
+
+if FAM:
+    fs = np.array([float(FAM.get(family(n), 1.0)) for n in names])
+    Z, ZT = Z * fs, ZT * fs
+    print("family factors:", {f: (float(FAM[f]), sum(family(n) == f for n in names)) for f in FAM})
 if CLIP:
     Z, ZT = np.clip(Z, -CLIP, CLIP), np.clip(ZT, -CLIP, CLIP)
 if SCALE:
