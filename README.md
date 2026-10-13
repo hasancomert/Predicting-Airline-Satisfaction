@@ -5,8 +5,9 @@ veri inceleme, sabit katlı CV (5, sonra 10 kat), özellik grupları, LightGBM /
 regresyon / RealMLP / TabM / TabPFN, Optuna ile ayar, kendi üyelerimiz ve açık OOF kütüphaneleri üstünde lojistik istif.
 Tüm deneyler `experiments.md`'de, başka bir projeye aktarım notu `HANDOFF_playground-series-s6e10.md`'de.
 
-**Durum (13.10.2026):** son gönderim s20, kendi 20 üyemiz + 247 açık OOF üyesinin L2 lojistik istifi (C=0.001):
-iç içe CV **0.962278**, public LB **0.96186** (76/1694). Kendi en iyi tek modellerimiz (10 kat): RealMLP + te2 +
+**Durum (13.10.2026):** son gönderim s21, kendi 20 üyemiz + 247 açık OOF üyesinin aile bazlı L2 lojistik istifi (C=0.001,
+TabPFN ×3, diğer TFM ×1.5):
+iç içe CV **0.962285**, public LB **0.96187** (19/1696). Kendi en iyi tek modellerimiz (10 kat): RealMLP + te2 +
 orijinal satırlar 0.96148–0.96151, XGBoost FS3 0.96148. Baseline LightGBM (varsayılanlar) 0.95780. Private LB:
 yarışma 31.10.2026'da bitiyor.
 
@@ -20,7 +21,8 @@ Ne işe yaradı (büyükten küçüğe, ölçüldüğü bağlamla):
 5. Açık OOF kütüphanelerini kendi üyelerimizle birlikte güçlü L2 lojistik istifte kullanmak: 0.96184 → 0.96213;
    sonra tablo temel modelleri (TFM, +0.00003), 09.10 havuz yenilemesi (+0.00004; en büyük ağırlığı 15 katlı TabPFN
    yeniden koşusu aldı), 10.10'da koumeimaki'nin 7 üyesi (+0.00001) ve bağlamında orijinal satırlar olan kendi
-   15 katlı TabPFN'imiz (+0.000009) ve 11.10 / 13.10 havuz yenilemeleri (+0.000012, +0.000010) ile 0.962278.
+   15 katlı TabPFN'imiz (+0.000009), 11.10 / 13.10 havuz yenilemeleri (+0.000012, +0.000010) ve istifleyicide aile
+   bazlı L2 (+0.000008) ile 0.962285.
 
 İşe yaramayanlar: elle türetilmiş gecikme / puan özetleri, puan grupları, 0 bayrakları, orijinal veride değer başına
 oranlar (TE varken), orijinal satır ağırlığını değiştirmek, üçlü hedef kodlamalar, sayısal basamaklar, rota
@@ -302,7 +304,8 @@ Gözlemler:
 | 17 | `s17_stack_own19_pub211_C0.001.csv` | s16 + koumeimaki'nin 7 OOF üyesi (TabPFN, TabICL, RealMLP, TabM, GBDT'ler) | 0.96225 | 0.96225 | 0.96184 |
 | 18 | `s18_stack_own20_pub211_c10og_C0.001.csv` | s17 + kendi 15 katlı TabPFN-3.5'imiz, bağlamda orijinal satırlarla (783 k satır, T4'e sığdıran bellek yaması) | 0.96226 | 0.96226 | 0.96184 |
 | 19 | `s19_stack_own20_pub229_C0.001.csv` | s18 + 11.10 açık havuz yenilemesi (goodpjw2008'in 16 ek üyesi, sachith7, dmitriykolmikov) | 0.96227 | 0.96227 | 0.96186 |
-| 20 | `s20_stack_own20_pub247_C0.001.csv` | s19 + 13.10 açık havuz yenilemesi (kagankoral 17, najiama XGBoost) | 0.96228 | 0.96228 | **0.96186** |
+| 20 | `s20_stack_own20_pub247_C0.001.csv` | s19 + 13.10 açık havuz yenilemesi (kagankoral 17, najiama XGBoost) | 0.96228 | 0.96228 | 0.96186 |
+| 21 | `s21_stack_own20_pub247_famL2_C0.001.csv` | s20 + istifleyicide aile bazlı L2 (TabPFN ×3, diğer TFM ×1.5) | 0.96229 | 0.96229 | **0.96187** |
 
 Public LB CV'nin yaklaşık 0.0006 altında. 1 → 2 adımında CV +0.00033 iken public +0.00028 arttı. Public kısım
 test'in küçük bir parçası; 140 bin satırlık kat std'si 0.0006 olduğundan, public skorun std'si 0.001'e yakın.
