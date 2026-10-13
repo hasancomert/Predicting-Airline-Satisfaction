@@ -238,6 +238,19 @@ for k in pd.read_csv(p / "members.csv")["member"]:
 p = d("ds__s6e10-catboost-all-categorical-oof-and-test")
 add("dk_cb_cat", np.load(p / "oof_cb_cat.npy"), np.load(p / "test_cb_cat.npy"), "dmitriykolmikov")
 
+# 13.10 refresh. najiama 07: single XGBoost (5 folds seed 42, sklearn TargetEncoder fitted on each training fold,
+# label-free route profile / frequencies, early stopping on the validation fold); 04-06 are blends (not used)
+p = d("ds__s6e10-oof")
+add("nj_07_xgb", by_id(pd.read_csv(p / "07_XGBoost_oof.csv"), tid, "oof_pred"),
+    by_id(pd.read_csv(p / "07_submission.csv"), sid, "satisfaction"), "najiama")
+
+# kagankoral "ablation members": 17 members of the encodings pipeline of kagankoral's public notebook
+# (StratifiedKFold(5 or 10, True, 42); te / te_pair with an inner CV inside each training fold, original-data
+# model and rates, frequencies; trees early-stop on the validation fold, RealMLP fixed epochs)
+p = d("ds__s6e10-ablation-members-oof")
+for k in pd.read_csv(p / "members.csv")["member"]:
+    add("ka_" + k, np.load(p / f"oof_{k}.npy"), np.load(p / f"test_{k}.npy"), "kagankoral ablation")
+
 k = pd.DataFrame(kept, columns=["name", "source", "oof_auc"])
 print(k.groupby("source").oof_auc.agg(["size", "max"]).sort_values("max", ascending=False).round(5))
 print(f"kept {len(kept)} members; rejected {len(rejected)}: {rejected}")
