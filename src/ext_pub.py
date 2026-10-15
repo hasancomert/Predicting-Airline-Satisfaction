@@ -195,6 +195,11 @@ for f in sorted(glob.glob(str(d("ds__s6e10-tfm-oof-and-test-predictions") / "oof
 p = d("ds__s6e10-golem-oof-library")
 for k in ("p_lgbm_auxev", "q_lgbm_auxev_10fold"):
     add("gl_" + k, np.load(p / f"oof_{k}.npy"), np.load(p / f"test_{k}.npy"), "golem")
+# 15.10: golem v6 members (same frozen folds; label-free aux EVs / counts / route profiles; trees early-stop on
+# the validation fold, the RealMLPs take their 4 epochs with that fold as pytabkit validation set). The library
+# itself was in a broken / processing state (404 for the full download); files fetched one by one
+for k in ("r_realmlp_auxev", "s_realmlp_raw_auxev_10fold", "t_xgb_d5_auxev", "u_catboost_ctr_auxev"):
+    add("gl_" + k, np.load(p / f"oof_{k}.npy"), np.load(p / f"test_{k}.npy"), "golem")
 
 # abdullahsafwan333 "oof-dataset": goodpjw2008's recipes re-run on 15 folds (seed 42), TabPFN members with
 # 3 seeds; the TabPFN code (aviator-tabpfn) uses the out-of-fold rows only as context. tabpfn_te_cnt has no
