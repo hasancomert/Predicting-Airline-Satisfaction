@@ -3,7 +3,9 @@
 Hedef `satisfaction` (True/False), gönderim **olasılık**, metrik **ROC AUC**. Bu repo uçtan uca çözümü içerir:
 veri inceleme, sabit katlı CV (5, sonra 10 kat), özellik grupları, LightGBM / XGBoost / CatBoost / MLP / seyrek lojistik
 regresyon / RealMLP / TabM / TabPFN, Optuna ile ayar, kendi üyelerimiz ve açık OOF kütüphaneleri üstünde lojistik istif.
-Tüm deneyler `experiments.md`'de, başka bir projeye aktarım notu `HANDOFF_playground-series-s6e10.md`'de.
+Tüm deneyler `experiments.md`'de, başka bir projeye aktarım notu `HANDOFF_playground-series-s6e10.md`'de; Kaggle
+"Name That LLM" (18 sınıflı metin sınıflandırma) için aktarım notu `HANDOFF_NAME_THAT_LLM.md`'de, çok sınıfa uyarlanmış ve
+sahte veriyle test edilmiş yeniden kullanılabilir kod `reuse/` altında (`python reuse/run_selftests.py`).
 
 **Durum (13.10.2026):** son gönderim s21, kendi 20 üyemiz + 247 açık OOF üyesinin aile bazlı L2 lojistik istifi (C=0.001,
 TabPFN ×3, diğer TFM ×1.5):
