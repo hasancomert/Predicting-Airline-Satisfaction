@@ -2,7 +2,7 @@
 
 Usage: python src/stack.py <out_name|-> own=<file with one own group per line> pub=<all|none|file>
                            [exclude=prefix1,prefix2] [C=1.0] [ablate=1] [tf=logit|probit] [nonneg=1]
-                           [clip=<max |logit|>] [scale=1] [mseed=7] [fam=tabpfn:3,tfm:1.5]
+                           [clip=<max |logit|>] [scale=1] [mseed=7] [fam=tabpfn:3,tfm:1.5] [tol=1e-4] [gbw=0]
   own     each line is one member: tags joined by ',' are averaged (seeds); "ext_..." tags work too
   pub     all: every ext/oof/pub_*.npy (minus exclude prefixes); none; or a file of names
   ablate  leave-one-source-out deltas (source = own / prefix of the public name)
@@ -12,6 +12,11 @@ Usage: python src/stack.py <out_name|-> own=<file with one own group per line> p
   fam     family-wise L2 (goodpjw2008's 'regularize families, not members', as in ewtherka's notebook): member
           logits of a family are multiplied by its factor s, which divides their L2 penalty by s^2. Families:
           tabpfn (TabPFN members), tfm (cdeotte's TFM set, TabICL, TabM), the rest 1
+  tol     LogisticRegression tolerance (sklearn default 1e-4 stops before the optimum with ~270 correlated
+          columns; 1e-8 converges, max_iter 20000)
+  gbw     blend weight of a shallow LightGBM stacker on the same member logits ('Trust the CV' recipe: 15
+          leaves, min 2000 rows per leaf, early stopping on a random 10% of the stacker's training rows);
+          blend of standardized LR and LightGBM scores, nested on the same meta folds
   mseed   seed of the meta folds (default 7; other seeds show the noise of a nested-CV difference)
   nonneg  member weights constrained to >= 0 (same penalised objective as sklearn, L-BFGS-B); a stack
           that cannot lean on small differences between near-duplicate members
@@ -39,6 +44,9 @@ TF = opts.get("tf", "logit")  # logit | probit (probit of the normalized rank, a
 NONNEG = int(opts.get("nonneg", 0))
 CLIP = float(opts.get("clip", 0))
 SCALE = int(opts.get("scale", 0))
+TOL = float(opts.get("tol", 1e-4))
+MAXIT = 20000 if TOL < 1e-4 else 3000
+GBW = float(opts.get("gbw", 0))
 _, _, y = load()
 
 
@@ -112,7 +120,7 @@ META = list(StratifiedKFold(5, shuffle=True, random_state=int(opts.get("mseed", 
 def fit_lr(A, t):
     """(weights, intercept) of the L2 logistic regression C * sum(logloss) + |w|^2 / 2."""
     if not NONNEG:
-        m = LogisticRegression(C=C, max_iter=3000).fit(A, t)
+        m = LogisticRegression(C=C, max_iter=MAXIT, tol=TOL).fit(A, t)
         return m.coef_.ravel(), m.intercept_[0]
     from scipy.optimize import minimize
 
@@ -126,11 +134,35 @@ def fit_lr(A, t):
     return r.x[:-1], r.x[-1]
 
 
+GBP = dict(objective="binary", learning_rate=0.03, num_leaves=15, min_data_in_leaf=2000, feature_fraction=0.5,
+           bagging_fraction=0.8, bagging_freq=1, lambda_l2=10.0, verbose=-1, num_threads=4, seed=0)
+
+
+def fit_gb(A, t):
+    import lightgbm as lgb
+    ai = np.random.default_rng(0).permutation(len(A))
+    cut = int(len(ai) * 0.9)
+    return lgb.train(GBP, lgb.Dataset(A[ai[:cut]], t[ai[:cut]]), 3000,
+                     valid_sets=[lgb.Dataset(A[ai[cut:]], t[ai[cut:]])],
+                     callbacks=[lgb.early_stopping(100, verbose=False)])
+
+
+def zs(v):
+    return (v - v.mean()) / v.std()
+
+
 def nested(cols):
-    s = np.zeros(len(y))
+    s, g = np.zeros(len(y)), np.zeros(len(y))
     for a, b in META:
         w, b0 = fit_lr(Z[a][:, cols], y[a])
         s[b] = Z[b][:, cols] @ w + b0
+        if GBW:
+            m = fit_gb(Z[a][:, cols], y[a])
+            g[b] = m.predict(Z[b][:, cols], raw_score=True, num_iteration=m.best_iteration)
+    if GBW:
+        print(f"  nested LR {roc_auc_score(y, s):.6f}, LightGBM {roc_auc_score(y, g):.6f}, "
+              f"blend w={GBW}: {roc_auc_score(y, (1 - GBW) * zs(s) + GBW * zs(g)):.6f}", flush=True)
+        return roc_auc_score(y, (1 - GBW) * zs(s) + GBW * zs(g))
     return roc_auc_score(y, s)
 
 
@@ -146,4 +178,8 @@ w = sorted(zip(coef, names), key=lambda t: -abs(t[0]))[:12]
 print("largest |weights|:", [(n[:40], round(float(c), 3)) for c, n in w])
 print(f"non-zero weights: {(np.abs(coef) > 1e-6).sum()} / {len(coef)}, negative: {(coef < -1e-6).sum()}")
 if out != "-":
-    write_submission(out, 1 / (1 + np.exp(-(ZT @ coef + b0))))
+    pt = ZT @ coef + b0
+    if GBW:
+        gm = fit_gb(Z, y)
+        pt = (1 - GBW) * zs(pt) + GBW * zs(gm.predict(ZT, raw_score=True, num_iteration=gm.best_iteration))
+    write_submission(out, 1 / (1 + np.exp(-pt)))
