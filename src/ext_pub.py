@@ -257,25 +257,17 @@ p = d("ds__s6e10-ablation-members-oof")
 for k in pd.read_csv(p / "members.csv")["member"]:
     add("ka_" + k, np.load(p / f"oof_{k}.npy"), np.load(p / f"test_{k}.npy"), "kagankoral ablation")
 
-# 17.10 refresh. goodpjw2008 extra members, version 3: TabPFN-3.5 with its own 4-estimator ensemble
-# (n_estimators=4, full 560k training-fold context, raw + catfd + catfd10, StratifiedKFold(5, True, 42); OOF
-# 0.961491). Not in their members.csv; the other files of the new version are identical to the 11.10 copy.
-p = d("ds__s6e10-goodpjw2008-extra-members-oof-v1017")
-add("gx_tabpfn_ne4", np.load(p / "oof_tabpfn_ne4.npy"), np.load(p / "test_tabpfn_ne4.npy"), "goodpjw extra")
-
-# jiatianzhang2 RealMLP (pytabkit RealMLP_TD, plr_sigma 32, n_ens 4, 20 epochs, best epoch on pytabkit's own
-# inner validation split of the training fold; raw columns + Flight Distance categorical twin; StratifiedKFold(5,
-# True, 42)); code read
-p = d("kn__s6e10-realmlp-plr32-route-twin")
-add("jz_realmlp_plr32", np.load(p / "oof_realmlp_plr32.npy"), np.load(p / "test_realmlp_plr32.npy"), "jiatianzhang2")
-
-# goodpjw2008 Part 3 kernel, full re-run on 17.10 (26 members, the recipe of the gp_ copies from Part 8: inner
-# 5-fold target encodings on the training rows, StratifiedKFold(5, True, 42), trees early-stop on the scored
-# fold); a new GPU draw, logit correlation 0.9987-0.9999 with the gp_ copies
-p = d("kn__s6e10-catboost-ctr-glm-margin-xgb-lb-0-96127")
-go, gt = pd.read_csv(p / "oof_members.csv"), pd.read_csv(p / "test_members.csv")
-for c in go.columns[1:]:
-    add("g3_" + c, by_id(go, tid, c), by_id(gt, sid, c), "goodpjw P3 rerun")
+# 17.10 refresh, tested with the s21 stack and kept out of the pool (meta seeds 7 / 1; fresh baseline 0.962285 /
+# 0.962283): goodpjw2008 extra members v3 "tabpfn_ne4" (TabPFN-3.5 with its own 4-estimator ensemble, full 560k
+# training-fold context, raw + catfd + catfd10, StratifiedKFold(5, True, 42), OOF 0.961491; in
+# ds__s6e10-goodpjw2008-extra-members-oof-v1017): 0.962286 / 0.962283; jiatianzhang2 RealMLP (pytabkit RealMLP_TD,
+# plr_sigma 32, best epoch on pytabkit's inner validation split, raw + Flight Distance categorical twin, 5 folds
+# seed 42, OOF 0.96017; kn__s6e10-realmlp-plr32-route-twin): 0.962285 / 0.962282; goodpjw2008 Part 3 kernel re-run
+# (25 members: a new GPU draw of the gp_ copies, logit correlation 0.9987-0.9999; its lgb_vb is an exact copy;
+# kn__s6e10-catboost-ctr-glm-margin-xgb-lb-0-96127): 0.962281 / 0.962282; all three 0.962283 / 0.962283 -> no gain.
+# Rejected: sarunpm's LightGBM (kn__airline-satisfaction-lgbm-0-96025-lb), target encodings fitted on the whole
+# train before its 15-fold CV.
+KEPT_OUT_1017 = ("gx_tabpfn_ne4", "jz_realmlp_plr32", "g3_<26 Part 3 members>")
 
 k = pd.DataFrame(kept, columns=["name", "source", "oof_auc"])
 print(k.groupby("source").oof_auc.agg(["size", "max"]).sort_values("max", ascending=False).round(5))
